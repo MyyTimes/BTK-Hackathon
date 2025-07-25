@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sınav Koçu</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Sınav Değerlendirmen</h1>
+
+        <div class="flex-container">
+            <div class="flex-item">
+                <h2>Ders Bazlı Başarı Oranları (%)</h2>
+                <div class="graph-container">
+                    <canvas id="lessonSuccessChart"></canvas>
+                </div>
+            </div>
+
+            <div class="flex-item input-section">
+                <h2>Yapay Zekaya Sor</h2>
+                <button id="startChatBtn" class="start-chat-button">Konuşmayı Başlat</button>
+
+                <div id="chatPanel" class="chat-container hidden">
+                    <div class="chat-messages" id="chatMessages">
+                        <!-- Sohbet mesajları buraya gelecek -->
+                    </div>
+                    <div class="chat-input-group">
+                        <input type="text" id="chatInput" placeholder="Mesajınızı yazın...">
+                        <button id="sendChatBtn">Gönder</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Haftalık Programın</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            {% for header in table_headers %}
+                                <th>{{ header }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in table_rows %}
+                            <tr>
+                                {% for cell in row %}
+                                    <td>{{ cell }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="nav-buttons">
+            <a href="{{ url_for('add_net_page') }}">Yeni Net Ekle / Netleri Gör</a>
+        </div>
+    </div>
+
+    <script>
+        // Ders Bazlı Başarı Oranları Grafiği Verileri
+        const lessonLabels = {{ lesson_labels | tojson }};
+        const successPercentages = {{ success_percentages | tojson }};
+
+        // Renkler - Her ders için farklı renk belirleyebiliriz
+        const backgroundColors = [
+            'rgba(255, 99, 132, 0.7)', // Türkçe
+            'rgba(54, 162, 235, 0.7)', // Matematik
+            'rgba(255, 206, 86, 0.7)', // Fen
+            'rgba(75, 192, 192, 0.7)', // Sosyal
+            'rgba(153, 102, 255, 0.7)' // Toplam
+        ];
+        const borderColors = [
+            'rgba(255, 99, 132, 1)',
+            'rgba(54, 162, 235, 1)',
+            'rgba(255, 206, 86, 1)',
+            'rgba(75, 192, 192, 1)',
+            'rgba(153, 102, 255, 1)'
+        ];
+
+        // Ders Bazlı Başarı Oranları Çubuk Grafik Çizimi
+        const ctxLessonSuccess = document.getElementById('lessonSuccessChart').getContext('2d');
+        const lessonSuccessChart = new Chart(ctxLessonSuccess, {
+            type: 'bar', // Çubuk grafik
+            data: {
+                labels: lessonLabels,
+                datasets: [{
+                    label: 'Başarı Oranı (%)',
+                    data: successPercentages,
+                    backgroundColor: backgroundColors,
+                    borderColor: borderColors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        min: Math.min(...successPercentages) - 5 < 0 ? Math.min(...successPercentages) - 5 : 0,
+                        max: 100, // Yüzde olduğu için maksimum 100
+                        title: {
+                            display: true,
+                            text: 'Başarı Oranı (%)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Dersler'
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.raw + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Sohbet İşlevselliği (Yapay zeka entegrasyonu kaldırıldı)
+        const startChatBtn = document.getElementById('startChatBtn');
+        const chatPanel = document.getElementById('chatPanel');
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const sendChatBtn = document.getElementById('sendChatBtn');
+
+        // Local Storage anahtarları
+        const CHAT_PANEL_STATE_KEY = 'chatPanelOpen';
+        const CHAT_HISTORY_KEY = 'chatHistory';
+
+        // Sohbet panelinin durumunu ve geçmişini Local Storage'dan yükle
+        function loadChatState() {
+            const isChatPanelOpen = localStorage.getItem(CHAT_PANEL_STATE_KEY) === 'true';
+            const savedChatHistory = localStorage.getItem(CHAT_HISTORY_KEY);
+
+            if (isChatPanelOpen) {
+                startChatBtn.classList.add('hidden');
+                chatPanel.classList.remove('hidden');
+                if (savedChatHistory) {
+                    chatMessages.innerHTML = savedChatHistory;
+                    // Sohbeti en aşağı kaydır
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                } else {
+                    // Geçmiş yoksa başlangıç mesajını göster
+                    chatMessages.innerHTML = '<div class="chat-message ai">Merhaba! Size nasıl yardımcı olabilirim? (Yapay zeka henüz bağlı değil.)</div>';
+                }
+            } else {
+                startChatBtn.classList.remove('hidden');
+                chatPanel.classList.add('hidden');
+            }
+        }
+
+        // Sohbet panelinin durumunu ve geçmişini Local Storage'a kaydet
+        function saveChatState() {
+            localStorage.setItem(CHAT_PANEL_STATE_KEY, !chatPanel.classList.contains('hidden'));
+            localStorage.setItem(CHAT_HISTORY_KEY, chatMessages.innerHTML);
+        }
+
+        // Konuşmayı Başlat butonuna tıklanınca sohbet panelini göster ve durumu kaydet
+        startChatBtn.addEventListener('click', () => {
+            startChatBtn.classList.add('hidden'); // Butonu gizle
+            chatPanel.classList.remove('hidden'); // Sohbet panelini göster
+            if (!localStorage.getItem(CHAT_HISTORY_KEY)) { // Eğer geçmiş yoksa başlangıç mesajını ekle
+                chatMessages.innerHTML = '<div class="chat-message ai">Merhaba! Size nasıl yardımcı olabilirim? (Yapay zeka henüz bağlı değil.)</div>';
+            }
+            chatInput.focus(); // Input alanına odaklan
+            saveChatState(); // Durumu kaydet
+        });
+
+        // Mesaj gönderme fonksiyonu (Yapay zeka API çağrısı kaldırıldı)
+        function sendMessage() {
+            const userMessage = chatInput.value.trim();
+            if (userMessage === '') return; // Boş mesaj gönderme
+
+            // Kullanıcının mesajını göster
+            const userMessageDiv = document.createElement('div');
+            userMessageDiv.classList.add('chat-message', 'user');
+            userMessageDiv.textContent = userMessage;
+            chatMessages.appendChild(userMessageDiv);
+
+            // Sohbeti aşağı kaydır
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Input alanını temizle
+            chatInput.value = '';
+
+            // Yapay zeka cevabı yerine bir placeholder mesajı göster
+            const aiMessageDiv = document.createElement('div');
+            aiMessageDiv.classList.add('chat-message', 'ai');
+            aiMessageDiv.textContent = 'Mesajınız alındı. Yapay zeka entegrasyonu şu an pasif. (Geliştirme aşamasında)';
+            chatMessages.appendChild(aiMessageDiv);
+
+            chatInput.focus(); // Input alanına tekrar odaklan
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            saveChatState(); // Her mesaj gönderildiğinde durumu kaydet
+        }
+
+        // Gönder butonuna tıklanınca veya Enter tuşuna basılınca mesaj gönder
+        sendChatBtn.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Sayfa yüklendiğinde sohbet durumunu yükle
+        document.addEventListener('DOMContentLoaded', loadChatState);
+    </script>
+</body>
+</html>
