@@ -280,10 +280,23 @@
                 startChatBtn.classList.add('hidden'); // Butonu gizle
                 chatPanel.classList.remove('hidden'); // Sohbet panelini göster
 
-                if (!localStorage.getItem(CHAT_HISTORY_KEY)) // Eğer geçmiş yoksa başlangıç mesajını ekle   **************************************
-                { 
-                    chatMessages.innerHTML = '<div class="chat-message ai">Merhaba! Size nasıl yardımcı olabilirim?</div>';
-                    // add first message to chat from AI
+                if (!localStorage.getItem(CHAT_HISTORY_KEY)) 
+                {
+                    chatMessages.innerHTML = '<div class="chat-message ai">Merhaba! Sınav sonuçlarınızı değerlendiriyorum.</div>';
+                    // Python API'den mesajı al
+                    fetch('/get_welcome_message')
+                        .then(response => response.json())
+                        .then(data => 
+                            {
+                                chatMessages.innerHTML = `<div class="chat-message ai">${data.message}</div>`;
+                            }
+                        )
+                        .catch(error => 
+                            {
+                                console.error('API çağrısı başarısız:', error);
+                                chatMessages.innerHTML = '<div class="chat-message ai">Merhaba! Size nasıl yardımcı olabilirim?</div>';
+                            }
+                        );
                 }
 
                 chatInput.focus(); // Input alanına odaklan

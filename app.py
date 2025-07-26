@@ -19,6 +19,7 @@ TOTAL_QUESTIONS = 120
 
 def GetMaxQuestionNumber():
     return {"Matematik": MAX_MATEMATIK_QUESTIONS, "Turkce" : MAX_TURKCE_QUESTIONS, "Fen" : MAX_FEN_QUESTIONS, "Sosyal" : MAX_SOCIAL_QUESTIONS}
+
 def GetDefaultLessonDatas():
     lesson_labels = ["Türkçe", "Matematik", "Fen", "Sosyal", "Toplam"]
     success_percentages = [0, 0, 0, 0, 0]
@@ -31,7 +32,7 @@ def EmptyExamResultRow():
     fen_score = [0]
     sosyal_score = [0]
     total_score = [0] 
-    return (deneme_labels, turkce_score, matematik_score, fen_score, sosyal_score, total_score)
+    return (deneme_labels, turkce_score, matematik_score, fen_score, sosyal_score, total_score)    
 
 # ---------- MAIN ROUTER ---------- 
 @app.route('/')
@@ -133,12 +134,20 @@ def index(): # ---------- MAIN PAGE ----------
                            table_headers=table_headers,
                            table_rows=table_rows)
 
+# ---------- WELCOME MESSAGE ROUTER ----------
+@app.route('/get_welcome_message')
+def get_welcome_message():
+    
+    welcome_ai_response = connect_ai.ai_welcome_message()
+    
+    return jsonify({'message': welcome_ai_response})
+
 # ---------- CHAT ROUTER ----------
 @app.route('/send_chat_message', methods=['POST'])
 def send_chat_message():
     user_message = request.json.get('message') # Get message from JSON request
 
-    ai_response = connect_ai.aiAnswer(user_message) # Process the user message with AI
+    ai_response = connect_ai.ai_answer(user_message) # Process the user message with AI
     
     return jsonify({'response': ai_response}) # Return JSON response -> AI response
 
