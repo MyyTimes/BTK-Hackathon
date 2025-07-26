@@ -1,6 +1,7 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 import openpyxl
 import os
+import connect_ai
 
 app = Flask(__name__)
 app.secret_key = "secret_key_A1W2S3E4D5F6" # for flash messages
@@ -16,6 +17,8 @@ MAX_FEN_QUESTIONS = 20
 MAX_SOCIAL_QUESTIONS = 20
 TOTAL_QUESTIONS = 120
 
+def GetMaxQuestionNumber():
+    return {"Matematik": MAX_MATEMATIK_QUESTIONS, "Turkce" : MAX_TURKCE_QUESTIONS, "Fen" : MAX_FEN_QUESTIONS, "Sosyal" : MAX_SOCIAL_QUESTIONS}
 def GetDefaultLessonDatas():
     lesson_labels = ["Türkçe", "Matematik", "Fen", "Sosyal", "Toplam"]
     success_percentages = [0, 0, 0, 0, 0]
@@ -129,7 +132,7 @@ def index(): # ---------- MAIN PAGE ----------
                            success_percentages=success_percentages,
                            table_headers=table_headers,
                            table_rows=table_rows)
-
+"""
 @app.route('/submit_data', methods=['POST'])
 def submit_data(): # Process the data from the 'input field' in main page
     
@@ -138,6 +141,14 @@ def submit_data(): # Process the data from the 'input field' in main page
         print(f"User input: {user_input}")
         return f"Data is received: {user_input}"
     return "Invalid request method."
+"""
+
+@app.route('/send_chat_message', methods=['POST'])
+def send_chat_message():
+    user_message = request.json.get('message') # Get message from JSON request
+    # For now, just echo the message back or send a static response
+    ai_response = connect_ai.aiAnswer(user_message)
+    return jsonify({'response': ai_response}) # Return JSON response
 
 # ---------- ADD SCORE ROUTER ----------
 @app.route('/add_net') 
@@ -215,16 +226,16 @@ def process_add_net(): # Reload the add net page after processing the form data 
             sosyal_score = int(sosyal_score) if sosyal_score else 0
             
             # input range checks
-            if not (turkce_score <= MAX_TURKCE_QUESTIONS):
+            if not (MAX_TURKCE_QUESTIONS * -0.25 <= turkce_score <= MAX_TURKCE_QUESTIONS):
                 flash(f'Maksimum Türkçe neti: {MAX_TURKCE_QUESTIONS}!', 'error')
                 return redirect(url_for('add_net_page'))
-            if not (matematik_score <= MAX_MATEMATIK_QUESTIONS):
+            if not (MAX_MATEMATIK_QUESTIONS * -0.25 <= matematik_score <= MAX_MATEMATIK_QUESTIONS):
                 flash(f'Maksimum matematil neti: {MAX_MATEMATIK_QUESTIONS}!', 'error')
                 return redirect(url_for('add_net_page'))
-            if not (fen_score <= MAX_FEN_QUESTIONS):
+            if not (MAX_FEN_QUESTIONS * -0.25 <= fen_score <= MAX_FEN_QUESTIONS):
                 flash(f'Maksimum fen neti: {MAX_FEN_QUESTIONS}!', 'error')
                 return redirect(url_for('add_net_page'))
-            if not (sosyal_score <= MAX_SOCIAL_QUESTIONS):
+            if not (MAX_SOCIAL_QUESTIONS * -0.25 <= sosyal_score <= MAX_SOCIAL_QUESTIONS):
                 flash(f'Maksimum sosyal neti: {MAX_SOCIAL_QUESTIONS}!', 'error')
                 return redirect(url_for('add_net_page'))
             
