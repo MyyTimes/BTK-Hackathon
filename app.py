@@ -132,23 +132,15 @@ def index(): # ---------- MAIN PAGE ----------
                            success_percentages=success_percentages,
                            table_headers=table_headers,
                            table_rows=table_rows)
-"""
-@app.route('/submit_data', methods=['POST'])
-def submit_data(): # Process the data from the 'input field' in main page
-    
-    if request.method == 'POST':
-        user_input = request.form.get('user_input')
-        print(f"User input: {user_input}")
-        return f"Data is received: {user_input}"
-    return "Invalid request method."
-"""
 
+# ---------- CHAT ROUTER ----------
 @app.route('/send_chat_message', methods=['POST'])
 def send_chat_message():
     user_message = request.json.get('message') # Get message from JSON request
-    # For now, just echo the message back or send a static response
-    ai_response = connect_ai.aiAnswer(user_message)
-    return jsonify({'response': ai_response}) # Return JSON response
+
+    ai_response = connect_ai.aiAnswer(user_message) # Process the user message with AI
+    
+    return jsonify({'response': ai_response}) # Return JSON response -> AI response
 
 # ---------- ADD SCORE ROUTER ----------
 @app.route('/add_net') 
@@ -199,7 +191,8 @@ def add_net_page(): # ---------- ADD SCORE PAGE / ADD_NET_PAGE ----------
                            MAX_TURKCE_NET=MAX_TURKCE_QUESTIONS,
                            MAX_MATEMATIK_NET=MAX_MATEMATIK_QUESTIONS,
                            MAX_FEN_NET=MAX_FEN_QUESTIONS,
-                           MAX_SOCIAL_NET=MAX_SOCIAL_QUESTIONS)
+                           MAX_SOCIAL_NET=MAX_SOCIAL_QUESTIONS,
+                           MAX_TOTAL_NET=TOTAL_QUESTIONS)
 
 # ---------- PROCESS ADD NET ROUTER ----------
 @app.route('/process_add_net', methods=['POST'])

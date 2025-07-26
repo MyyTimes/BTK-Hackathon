@@ -20,9 +20,12 @@
             </div>
 
             <div class="flex-item input-section">
-                <h2>Yapay Zekaya Sor</h2>
+                <h2>Yapay Zekaya Sor 
+                    <button id="resetChatBtn" class="reset-chat-button" title="Sohbeti Sıfırla">
+                        <span class="reset-icon">&#x21BA;</span> 
+                    </button>
+                </h2>
                 <button id="startChatBtn" class="start-chat-button">Konuşmayı Başlat</button>
-
                 <div id="chatPanel" class="chat-container hidden">
                     <div class="chat-messages" id="chatMessages">
                         </div>
@@ -130,59 +133,65 @@
             }
         });
 
+
+        //------------------------------
+        //------------------------------
         // Sohbet İşlevselliği
+        
+        // get from html - id
         const startChatBtn = document.getElementById('startChatBtn');
         const chatPanel = document.getElementById('chatPanel');
         const chatMessages = document.getElementById('chatMessages');
         const chatInput = document.getElementById('chatInput');
         const sendChatBtn = document.getElementById('sendChatBtn');
+        const resetChatBtn = document.getElementById('resetChatBtn'); 
 
         // Local Storage anahtarları
         const CHAT_PANEL_STATE_KEY = 'chatPanelOpen';
         const CHAT_HISTORY_KEY = 'chatHistory';
 
         // Sohbet panelinin durumunu ve geçmişini Local Storage'dan yükle
-        function loadChatState() {
+        function loadChatState() 
+        {
             const isChatPanelOpen = localStorage.getItem(CHAT_PANEL_STATE_KEY) === 'true';
             const savedChatHistory = localStorage.getItem(CHAT_HISTORY_KEY);
 
-            if (isChatPanelOpen) {
+            if (isChatPanelOpen) 
+            {
                 startChatBtn.classList.add('hidden');
                 chatPanel.classList.remove('hidden');
-                if (savedChatHistory) {
+
+                if (savedChatHistory) 
+                {
                     chatMessages.innerHTML = savedChatHistory;
                     // Sohbeti en aşağı kaydır
                     chatMessages.scrollTop = chatMessages.scrollHeight;
-                } else {
+                } 
+                else 
+                {
                     // Geçmiş yoksa başlangıç mesajını göster
                     chatMessages.innerHTML = '<div class="chat-message ai">Merhaba! Size nasıl yardımcı olabilirim?</div>';
                 }
-            } else {
+            } 
+            else 
+            {
                 startChatBtn.classList.remove('hidden');
                 chatPanel.classList.add('hidden');
             }
         }
 
         // Sohbet panelinin durumunu ve geçmişini Local Storage'a kaydet
-        function saveChatState() {
+        function saveChatState() 
+        {
             localStorage.setItem(CHAT_PANEL_STATE_KEY, !chatPanel.classList.contains('hidden'));
             localStorage.setItem(CHAT_HISTORY_KEY, chatMessages.innerHTML);
         }
 
-        // Konuşmayı Başlat butonuna tıklanınca sohbet panelini göster ve durumu kaydet
-        startChatBtn.addEventListener('click', () => {
-            startChatBtn.classList.add('hidden'); // Butonu gizle
-            chatPanel.classList.remove('hidden'); // Sohbet panelini göster
-            if (!localStorage.getItem(CHAT_HISTORY_KEY)) { // Eğer geçmiş yoksa başlangıç mesajını ekle
-                chatMessages.innerHTML = '<div class="chat-message ai">Merhaba! Size nasıl yardımcı olabilirim?</div>';
-            }
-            chatInput.focus(); // Input alanına odaklan
-            saveChatState(); // Durumu kaydet
-        });
-
         // Mesaj gönderme fonksiyonu (Yapay zeka API çağrısı eklendi)
-        async function sendMessage() { // Added 'async' keyword
+        async function sendMessage() 
+        { // Added 'async' keyword
             const userMessage = chatInput.value.trim();
+
             if (userMessage === '') return; // Boş mesaj gönderme
 
             // Kullanıcının mesajını göster
@@ -200,19 +209,23 @@
             // Loading mesajı veya animasyonu eklenebilir
             const aiLoadingDiv = document.createElement('div');
             aiLoadingDiv.classList.add('chat-message', 'ai', 'loading-message'); // Add a loading class
-            aiLoadingDiv.textContent = 'Yapay zeka düşünüyor...';
+            aiLoadingDiv.textContent = 'Düşünüyorum...';
             chatMessages.appendChild(aiLoadingDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
 
-            try {
+            try 
+            {
                 // Flask uygulamasına mesajı gönder
-                const response = await fetch('/send_chat_message', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ message: userMessage })
-                });
+                const response = await fetch('/send_chat_message', 
+                    {
+                        method: 'POST',
+                        headers: 
+                            {
+                                'Content-Type': 'application/json'
+                            },
+                        body: JSON.stringify({ message: userMessage })
+                    }
+                );
 
                 const data = await response.json(); // JSON yanıtı ayrıştır
                 const aiResponse = data.response; // Python'dan gelen yanıt
@@ -226,13 +239,15 @@
                 aiMessageDiv.textContent = aiResponse;
                 chatMessages.appendChild(aiMessageDiv);
 
-            } catch (error) {
+            } 
+            catch (error) 
+            {
                 console.error('Mesaj gönderilirken hata oluştu:', error);
                 // Hata durumunda loading mesajını kaldır ve hata mesajı göster
                 chatMessages.removeChild(aiLoadingDiv);
                 const errorMessageDiv = document.createElement('div');
                 errorMessageDiv.classList.add('chat-message', 'ai', 'error-message');
-                errorMessageDiv.textContent = 'Üzgünüm, mesajınız işlenirken bir hata oluştu.';
+                errorMessageDiv.textContent = 'Üzgünüm, mesajınızı anlayamadım.';
                 chatMessages.appendChild(errorMessageDiv);
             }
 
@@ -242,13 +257,51 @@
             saveChatState(); // Her mesaj gönderildiğinde durumu kaydet
         }
 
+        // BUTTON ACTIONS
+
+        resetChatBtn.addEventListener('click', () => 
+            {
+                // Kullanıcıdan emin olup olmadığını sor
+                if (confirm("Sohbetimiz sıfırlanacak. Devam etmek istiyor musunuz?")) 
+                {
+                    // Local Storage'daki sohbet geçmişini temizle
+                    localStorage.removeItem(CHAT_HISTORY_KEY);
+                    // İsteğe bağlı: Sohbet panelinin açık/kapalı durumunu da sıfırla
+                    localStorage.removeItem(CHAT_PANEL_STATE_KEY);
+                    // Sayfayı yeniden yükle
+                    location.reload();
+                }
+            }
+        );
+
+        // Konuşmayı Başlat butonuna tıklanınca sohbet panelini göster ve durumu kaydet
+        startChatBtn.addEventListener('click', () => 
+            {
+                startChatBtn.classList.add('hidden'); // Butonu gizle
+                chatPanel.classList.remove('hidden'); // Sohbet panelini göster
+
+                if (!localStorage.getItem(CHAT_HISTORY_KEY)) // Eğer geçmiş yoksa başlangıç mesajını ekle   **************************************
+                { 
+                    chatMessages.innerHTML = '<div class="chat-message ai">Merhaba! Size nasıl yardımcı olabilirim?</div>';
+                    // add first message to chat from AI
+                }
+
+                chatInput.focus(); // Input alanına odaklan
+                saveChatState(); // Durumu kaydet
+            }
+        );
+
         // Gönder butonuna tıklanınca veya Enter tuşuna basılınca mesaj gönder
         sendChatBtn.addEventListener('click', sendMessage);
-        chatInput.addEventListener('keypress', (event) => {
-            if (event.key === 'Enter') {
-                sendMessage();
+        chatInput.addEventListener('keypress', 
+            (event) => 
+            {
+                if (event.key === 'Enter') 
+                {
+                    sendMessage();
+                }
             }
-        });
+        );
 
         // Sayfa yüklendiğinde sohbet durumunu yükle
         document.addEventListener('DOMContentLoaded', loadChatState);

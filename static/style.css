@@ -28,6 +28,16 @@ header {
     position: relative;
 }
 
+h2 {
+    color: #2c3e50;
+    margin-top: 0;
+    margin-bottom: 15px;
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 25px;
+}
+
 /* Genel input ve buton stilleri (hem index.html hem add_net.html için) */
 input[type="text"],
 input[type="number"],
@@ -344,4 +354,27 @@ tr:nth-child(even) {
     .lesson-buttons button {
         width: 100%;
     }
+}
+
+/* Sıfırlama Butonu Stili */
+.reset-chat-button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px; 
+    width: 30px; 
+    height: 30px;
+    font-size: 1.2em; 
+    cursor: pointer;
+    display: inline-flex; /* Sembolü ortalamak için */
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.3s ease;
+}
+.reset-chat-button:hover {
+    background-color: #218838; 
+}
+.reset-icon { /* Resetleme butonunun içindeki geri alma sembolü */
+    display: inline-block; 
+    transform: rotate(-15deg) translateY(-3px);
 }

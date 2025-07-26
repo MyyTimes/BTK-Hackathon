@@ -11,11 +11,13 @@
         const MAX_MATEMATIK_NET = {{ MAX_MATEMATIK_NET | tojson }};
         const MAX_FEN_NET = {{ MAX_FEN_NET | tojson }};
         const MAX_SOCIAL_NET = {{ MAX_SOCIAL_NET | tojson }};
+        const MAX_TOTAL_NET = {{ MAX_TOTAL_NET | tojson }};
 
         const MIN_TURKCE_NET    = MAX_TURKCE_NET * -0.25;
         const MIN_MATEMATIK_NET = MAX_MATEMATIK_NET * -0.25;
         const MIN_FEN_NET       = MAX_FEN_NET * -0.25;
         const MIN_SOCIAL_NET    = MAX_SOCIAL_NET * -0.25;
+        const MIN_TOTAL_NET     = MAX_TOTAL_NET * -0.25;
     </script>
 </head>
 <body>
@@ -36,23 +38,23 @@
             <form action="{{ url_for('process_add_net') }}" method="post">
                 <div class="form-group">
                     <label for="deneme_adi">Deneme Adı:</label>
-                    <input type="text" id="deneme_adi" name="exam_name" required placeholder="Örn: Deneme 8">
+                    <input type="text" id="deneme_adi" name="exam_name" required placeholder="Örn: Deneme 1">
                 </div>
                 <div class="form-group">
                     <label for="turkce_net">Türkçe Neti:</label>
-                    <input type="number" id="turkce_net" name="turkce_score" min="{{ MIN_TURKCE_NET }}" max="{{ MAX_TURKCE_NET }}" placeholder="Örn: 30" value="0">
+                    <input type="number" id="turkce_net" name="turkce_score" min="{{ MIN_TURKCE_NET }}" max="{{ MAX_TURKCE_NET }}" placeholder="Sayı giriniz..." value="0">
                 </div>
                 <div class="form-group">
                     <label for="matematik_net">Matematik Neti:</label>
-                    <input type="number" id="matematik_net" name="matematik_score" min="{{ MIN_MATEMATIK_NET }}" max="{{ MAX_MATEMATIK_NET }}" placeholder="Örn: 35" value="0">
+                    <input type="number" id="matematik_net" name="matematik_score" min="{{ MIN_MATEMATIK_NET }}" max="{{ MAX_MATEMATIK_NET }}" placeholder="Sayı giriniz..." value="0">
                 </div>
                 <div class="form-group">
                     <label for="fen_net">Fen Neti:</label>
-                    <input type="number" id="fen_net" name="fen_score" min="{{ MIN_FEN_NET }}" max="{{ MAX_FEN_NET }}" placeholder="Örn: 15" value="0">
+                    <input type="number" id="fen_net" name="fen_score" min="{{ MIN_FEN_NET }}" max="{{ MAX_FEN_NET }}" placeholder="Sayı giriniz..." value="0">
                 </div>
                 <div class="form-group">
                     <label for="sosyal_net">Sosyal Neti:</label>
-                    <input type="number" id="sosyal_net" name="sosyal_score" min="{{ MIN_SOCIAL_NET }}" max="{{ MAX_SOCIAL_NET }}" placeholder="Örn: 10" value="0">
+                    <input type="number" id="sosyal_net" name="sosyal_score" min="{{ MIN_SOCIAL_NET }}" max="{{ MAX_SOCIAL_NET }}" placeholder="Sayı giriniz..." value="0">
                 </div>
 
                 <div class="button-group">
@@ -97,8 +99,8 @@
                 data: toplamNets,
                 borderColor: 'rgba(75, 192, 192, 1)',
                 backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                maxNet: MAX_TURKCE_NET + MAX_MATEMATIK_NET + MAX_FEN_NET + MAX_SOCIAL_NET,
-                minNet: MIN_TURKCE_NET + MIN_MATEMATIK_NET + MIN_FEN_NET + MIN_SOCIAL_NET
+                maxNet: MAX_TOTAL_NET,
+                minNet: MIN_TOTAL_NET
             },
             "turkce": {
                 label: 'Türkçe Netleri',
