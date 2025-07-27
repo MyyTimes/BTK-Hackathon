@@ -3,7 +3,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, SystemMessage
 import pandas as pd
 from openpyxl import Workbook
-from app import GetMaxQuestionNumber
+from app import get_max_question_number
 
 START_HOUR = "08:00"
 END_HOUR = "21:00"
@@ -13,35 +13,8 @@ def get_personal_data():
     examData = pd.read_excel("exam_results.xlsx")
     return examData.to_string()
 
-def give_answer(model, messages):
-    response = model.invoke(messages)
-    return response.content
-
-def ai_answer(user_input):
-    load_dotenv()
-
-    model = ChatGoogleGenerativeAI(model="gemini-2.0-flash")
-    messages = [
-        SystemMessage(content=f"""You are an exam assistant of a student.
-                                There are 4 lessons: Matematik, Turkce, Fen, Sosyal.
-                                Question numbers are : {GetMaxQuestionNumber()}.
-                                Last exams results are : {get_personal_data()}.
-                                You'll review the user's message. 
-                                You should be realistic.
-                                You can say negative feedbacks of the student if the scores are unsufficient.
-                                Give some advice.
-                                Write maximum 5 sentences."""),
-        
-        HumanMessage(content=user_input),
-    ]
-
-    return give_answer(model, messages)
-
-# Create a weekly schedule based on the AI's response
-def give_welcome_answer(model, messages):
-    
-    response = model.invoke(messages).content
-    
+# create a weekly schedule based on the AI's response -> text to excel file
+def create_schedule(response:str):
     words = response.split()
 
     wb = Workbook()
@@ -81,6 +54,37 @@ def give_welcome_answer(model, messages):
                 hour = word
             
     wb.save("weekly_schedule.xlsx")
+    
+def give_answer(model, messages):
+    response = model.invoke(messages)
+    return response.content
+
+def ai_answer(user_input):
+    load_dotenv()
+
+    model = ChatGoogleGenerativeAI(model="gemini-2.0-flash")
+    messages = [
+        SystemMessage(content=f"""You are an exam assistant of a student.
+                                There are 4 lessons: Matematik, Turkce, Fen, Sosyal.
+                                Question numbers are : {get_max_question_number()}.
+                                Last exams results are : {get_personal_data()}.
+                                You'll review the user's message. 
+                                You should be realistic.
+                                You can say negative feedbacks of the student if the scores are unsufficient.
+                                Give some advice.
+                                Write maximum 5 sentences."""),
+        
+        HumanMessage(content=user_input),
+    ]
+
+    return give_answer(model, messages)
+
+# Create a weekly schedule based on the AI's response
+def give_welcome_answer(model, messages):
+    
+    response = model.invoke(messages).content
+    
+    create_schedule(response)
 
     return response
     
@@ -96,7 +100,7 @@ def ai_welcome_message():
 
                                     There are 4 lessons: Matematik, Türkçe, Fen, and Sosyal.
 
-                                    The total number of questions per lesson is given by: {GetMaxQuestionNumber()}.
+                                    The total number of questions per lesson is given by: {get_max_question_number()}.
 
                                     The student's recent exam results are: {get_personal_data()}.
 
@@ -115,7 +119,7 @@ def ai_welcome_message():
                                     """),
 
         
-        HumanMessage(content="Bana haftalık bir çalışma programı hazırla. Saat 10.00 ile 16.00 arası okuldayım o yüzden o aralığı atla."),
+        HumanMessage(content="Bana haftalık bir çalışma programı hazırla. Saat 10.00 ile 16.00 arası okuldayım. O aralığa okul yaz."),
     ]
 
     return give_welcome_answer(model, messages)
