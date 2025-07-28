@@ -17,7 +17,7 @@ MAX_FEN_QUESTIONS = 20
 MAX_SOCIAL_QUESTIONS = 20
 TOTAL_QUESTIONS = 120
 
-def GetMaxQuestionNumber():
+def get_max_question_number():
     return {"Matematik": MAX_MATEMATIK_QUESTIONS, "Turkce" : MAX_TURKCE_QUESTIONS, "Fen" : MAX_FEN_QUESTIONS, "Sosyal" : MAX_SOCIAL_QUESTIONS}
 
 def GetDefaultLessonDatas():
@@ -25,7 +25,7 @@ def GetDefaultLessonDatas():
     success_percentages = [0, 0, 0, 0, 0]
     return lesson_labels, success_percentages
 
-def EmptyExamResultRow():
+def empty_exam_result_row():
     deneme_labels = ["Error"]
     turkce_score = [0]
     matematik_score = [0]
@@ -140,7 +140,7 @@ def get_welcome_message():
     
     welcome_ai_response = connect_ai.ai_welcome_message()
     
-    return jsonify({'message': welcome_ai_response})
+    return jsonify({'message': welcome_ai_response, 'should_refresh': True})
 
 # ---------- CHAT ROUTER ----------
 @app.route('/send_chat_message', methods=['POST'])
@@ -183,11 +183,11 @@ def add_net_page(): # ---------- ADD SCORE PAGE / ADD_NET_PAGE ----------
             
         except Exception as e:
             print(f"Error: {e}")
-            (deneme_labels, turkce_score, matematik_score, fen_score, sosyal_score, total_score) = EmptyExamResultRow()
+            (deneme_labels, turkce_score, matematik_score, fen_score, sosyal_score, total_score) = empty_exam_result_row()
             
     else:
         print(f"Çizgi Grafik (deneme_neti.xlsx) Excel dosyası bulunamadı: {EXAM_RESULT_EXCEL_PATH}")
-        (deneme_labels, turkce_score, matematik_score, fen_score, sosyal_score, total_score) = EmptyExamResultRow()
+        (deneme_labels, turkce_score, matematik_score, fen_score, sosyal_score, total_score) = empty_exam_result_row()
 
     # Create the add net page with the data
     return render_template('add_net.html',

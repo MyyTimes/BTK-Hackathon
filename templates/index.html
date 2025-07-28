@@ -288,7 +288,13 @@
                         .then(response => response.json())
                         .then(data => 
                             {
-                                chatMessages.innerHTML = `<div class="chat-message ai">${data.message}</div>`;
+                                //chatMessages.innerHTML = `<div class="chat-message ai">${data.message}</div>`;
+                                if (data.should_refresh) 
+                                {
+                                    chatMessages.innerHTML = `<div class="chat-message ai">Programınızı hazırladım.</div>`;
+                                    saveChatState();
+                                    location.reload();
+                                }
                             }
                         )
                         .catch(error => 
@@ -313,6 +319,21 @@
                 {
                     sendMessage();
                 }
+            }
+        );
+        
+        // Haftalık programdaki 'Boş Zaman' hücrelerini bul -> yeşil yap
+        document.addEventListener('DOMContentLoaded', () => 
+            {
+                loadChatState();
+                document.querySelectorAll('.table-container table td').forEach(cell => 
+                    {
+                        if (cell.textContent.trim() === 'Boş Zaman') 
+                        {
+                            cell.classList.add('empty-time');
+                        }
+                    }
+                );
             }
         );
 

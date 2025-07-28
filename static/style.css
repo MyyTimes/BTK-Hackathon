@@ -378,3 +378,8 @@ tr:nth-child(even) {
     display: inline-block; 
     transform: rotate(-15deg) translateY(-3px);
 }
+
+.empty-time {
+    color: green;
+    font-weight: bold;
+}
