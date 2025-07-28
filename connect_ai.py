@@ -1,7 +1,11 @@
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnableBranch, RunnableLambda
 import pandas as pd
+import json
 from openpyxl import Workbook
 from app import get_max_question_number
 
@@ -9,9 +13,72 @@ START_HOUR = "08:00"
 END_HOUR = "21:00"
 
 # get exam results from excel file and convert to string to send to AI model
-def get_personal_data(): 
+def get_personal_data():
     examData = pd.read_excel("exam_results.xlsx")
     return examData.to_string()
+
+schedule_prompt = PromptTemplate(
+        template=f"""You are an exam assistant helping a student create a personalized weekly study schedule based on their latest exam results.
+                                    
+                                    Examine the user request, create the schedule according to user's wishes.
+                                    
+                                    There are 4 lessons: Matematik, Türkçe, Fen, and Sosyal.
+
+                                    The total number of questions per lesson is given by: {"{"}{get_max_question_number()}{"}"}.
+
+                                    The student's recent exam results are: {get_personal_data()}.
+
+                                    Create a detailed weekly study schedule from Monday (Pazartesi) to Sunday (Pazar).
+
+                                    - Each day starts at {START_HOUR} and ends at {END_HOUR}.
+                                    - Each hour should be represented in the schedule in 24-hour format with leading zeros, e.g. "08:00".
+                                    - For each hour, first write the day of the week (in Turkish), followed by the lesson to study at that hour.
+                                    - If no lesson is scheduled at a specific hour, write "NULL".
+                                    - The output for each day should be a single line starting with the day name, followed by pairs of "hour lesson" separated by spaces.
+                                    - Example output for one day:
+                                    Pazartesi 08:00 Türkçe 09:00 Matematik 10:00 NULL 11:00 Fen 12:00 NULL 13:00 Sosyal 14:00 Matematik 15:00 NULL 16:00 Türkçe 17:00 NULL 18:00 Fen 19:00 NULL 20:00 Sosyal 21:00 NULL
+
+                                    Only output the weekly schedule exactly in this format, with no extra text, explanation, or punctuation. This output will be parsed automatically, so please keep the format strict and consistent.
+                                    
+                                    User message: {{query}}
+
+                                    """
+    )
+
+advice_prompt = PromptTemplate(
+        template=f"""You are an exam assistant of a student.
+                                There are 4 lessons: Matematik, Turkce, Fen, Sosyal.
+                                Question numbers are : {"{"}{get_max_question_number()}{"}"}.
+                                Last exams results are : {get_personal_data()}.
+                                You'll review the user's message. 
+                                You should be realistic.
+                                You can say negative feedbacks of the student if the scores are unsufficient.
+                                Give some advice.
+                                Write maximum 7 sentences.
+                                
+                                User message: {{query}}
+                                """,
+        input_variables=["query"]
+    )
+
+default_prompt = PromptTemplate(
+        template="""Üzgünüm, isteğinizi tam olarak anlayamadım veya desteklemiyorum. Lütfen daha açık bir şekilde ifade edin.
+        """
+    )
+
+router_prompt_template = PromptTemplate(
+    template="""Aşağıdaki kullanıcı girdisinin temel niyetini belirle ve uygun hedefi seç.
+                    Sadece bir hedef seçmeli ve aşağıdaki formatta çıktı vermelisin:
+                    '{{ "destination": "hedef_adi", "next_inputs": {{"query": "orijinal_kullanici_sorgusu"}} }}'
+
+                    Olası hedefler ve açıklamaları:
+                    - 'schedule': Kullanıcı bir ders programı veya çalışma takvimi oluşturmak istediğinde kullan. Örnek: "Bana bu hafta için bir ders programı hazırla", "Haftalık takvimimi düzenle".
+                    - 'advice': Kullanıcı ders başarısı, öğrenme teknikleri veya genel kişisel gelişim hakkında tavsiye istediğinde kullan. Örnek: "Notlarımı nasıl yükseltebilirim?", "Daha iyi ders çalışmak için ne yapmalıyım?".
+                    - 'default': Yukarıdaki kategorilere uymayan herhangi bir istek veya anlaşılmayan sorgular için kullan.
+                    Kullanıcı girdisi: {query}
+                    """,
+    input_variables=["query"]
+)
 
 # create a weekly schedule based on the AI's response -> text to excel file
 def create_schedule(response:str):
@@ -54,6 +121,7 @@ def create_schedule(response:str):
                 hour = word
             
     wb.save("weekly_schedule.xlsx")
+    return "Ders programı oluşturuldu!"
     
 def give_answer(model, messages):
     response = model.invoke(messages)
@@ -63,21 +131,39 @@ def ai_answer(user_input):
     load_dotenv()
 
     model = ChatGoogleGenerativeAI(model="gemini-2.0-flash")
-    messages = [
-        SystemMessage(content=f"""You are an exam assistant of a student.
-                                There are 4 lessons: Matematik, Turkce, Fen, Sosyal.
-                                Question numbers are : {get_max_question_number()}.
-                                Last exams results are : {get_personal_data()}.
-                                You'll review the user's message. 
-                                You should be realistic.
-                                You can say negative feedbacks of the student if the scores are unsufficient.
-                                Give some advice.
-                                Write maximum 5 sentences."""),
-        
-        HumanMessage(content=user_input),
-    ]
 
-    return give_answer(model, messages)
+    schedule_chain = schedule_prompt | model | StrOutputParser() | RunnableLambda(create_schedule)
+    advice_chain = advice_prompt | model | StrOutputParser()
+    default_chain = default_prompt | model | StrOutputParser()
+    router_decision_chain = router_prompt_template | model | StrOutputParser() | RunnableLambda(parse_router_output)
+
+    main_router_flow = RunnableBranch(
+        (
+            lambda x: x["destination"] == "schedule",
+            schedule_chain
+        ),
+        (
+            lambda x: x["destination"] == "advice",
+            advice_chain
+        ),
+        default_chain   #Hiçbiri eşleşmezse bu çalışır
+    )
+
+    final_router_chain = (
+            {"decision": router_decision_chain, "original_query": RunnableLambda(lambda x: x["query"])}
+            | RunnableLambda(
+        lambda x: main_router_flow.invoke(
+            {
+                "query": x["original_query"],
+                "destination": x["decision"]["destination"]
+            }
+        )
+    )
+    )
+
+    response1 = final_router_chain.invoke({"query": user_input})
+    return response1
+
 
 # Create a weekly schedule based on the AI's response
 def give_welcome_answer(model, messages):
@@ -124,4 +210,14 @@ def ai_welcome_message():
 
     return give_welcome_answer(model, messages)
 
-
+def parse_router_output(llm_output: str):
+    try:
+        # Bazen LLM çıktısı tam JSON olmayabilir, baştaki ve sondaki '{' ve '}' karakterlerini kontrol et
+        # Veya regex kullanarak JSON bloğunu çıkarabilirsiniz.
+        # Basit bir deneme için:
+        clean_output = llm_output.strip().replace("```json", "").replace("```", "")
+        return json.loads(clean_output)
+    except json.JSONDecodeError as e:
+        print(f"JSON ayrıştırma hatası: {e}. Ham çıktı: {llm_output}")
+        # Hata durumunda varsayılan bir rota döndürebiliriz
+        return {"destination": "default", "next_inputs": {"query": llm_output}}

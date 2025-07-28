@@ -148,6 +148,8 @@ def send_chat_message():
     user_message = request.json.get('message') # Get message from JSON request
 
     ai_response = connect_ai.ai_answer(user_message) # Process the user message with AI
+    if ai_response == "Ders programı oluşturuldu!":
+        return jsonify({'response': ai_response, 'should_refresh': False})
     
     return jsonify({'response': ai_response}) # Return JSON response -> AI response
 
