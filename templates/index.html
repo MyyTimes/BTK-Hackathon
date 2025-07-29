@@ -62,7 +62,7 @@
         </div>
 
         <div class="nav-buttons">
-            <a href="{{ url_for('add_net_page') }}">Yeni Net Ekle / Netleri Gör</a>
+            <a href="{{ url_for('add_exam_page') }}">Yeni Net Ekle / Netleri Gör</a>
         </div>
     </div>
 
@@ -239,6 +239,9 @@
                 aiMessageDiv.textContent = aiResponse;
                 chatMessages.appendChild(aiMessageDiv);
 
+                 if(data.should_refresh)
+                    location.reload();
+
             } 
             catch (error) 
             {
@@ -280,33 +283,10 @@
                 startChatBtn.classList.add('hidden'); // Butonu gizle
                 chatPanel.classList.remove('hidden'); // Sohbet panelini göster
 
-                if (!localStorage.getItem(CHAT_HISTORY_KEY)) 
-                {
-                    chatMessages.innerHTML = '<div class="chat-message ai">Merhaba! Sınav sonuçlarınızı değerlendiriyorum.</div>';
-                    // Python API'den mesajı al
-                    fetch('/get_welcome_message')
-                        .then(response => response.json())
-                        .then(data => 
-                            {
-                                //chatMessages.innerHTML = `<div class="chat-message ai">${data.message}</div>`;
-                                if (data.should_refresh) 
-                                {
-                                    chatMessages.innerHTML = `<div class="chat-message ai">Programınızı hazırladım.</div>`;
-                                    saveChatState();
-                                    location.reload();
-                                }
-                            }
-                        )
-                        .catch(error => 
-                            {
-                                console.error('API çağrısı başarısız:', error);
-                                chatMessages.innerHTML = '<div class="chat-message ai">Merhaba! Size nasıl yardımcı olabilirim?</div>';
-                            }
-                        );
-                }
+                chatMessages.innerHTML = '<div class="chat-message ai">Merhaba, size nasıl yardımcı olabilirim?.</div>';
 
                 chatInput.focus(); // Input alanına odaklan
-                saveChatState(); // Durumu kaydet
+                //saveChatState(); // Durumu kaydet
             }
         );
 
