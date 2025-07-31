@@ -1,106 +1,59 @@
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, SystemMessage
-import pandas as pd
-from openpyxl import Workbook
-from app import get_max_question_number
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnableBranch, RunnableLambda
+import json
+from lesson_functions import get_max_question_number
+from excel_operations import get_personal_data, create_schedule, get_test_book_list
 
 START_HOUR = "08:00"
 END_HOUR = "21:00"
 
-# get exam results from excel file and convert to string to send to AI model
-def get_personal_data(): 
-    examData = pd.read_excel("exam_results.xlsx")
-    return examData.to_string()
+book_advice_prompt = PromptTemplate(
+    template = f"""
+    Always respond in **Turkish**. You are an exam assistant helping a student prepare for the **LGS exam**, which is required for admission to high schools in Turkey.
 
-# create a weekly schedule based on the AI's response -> text to excel file
-def create_schedule(response:str):
-    words = response.split()
+    Analyze the student's request carefully, focusing on their **past exam results**. Give **more weight to the final exam results** when evaluating their level.
 
-    wb = Workbook()
-    excelFile = wb.active
-    excelFile.title = "Haftalık Program"
+    Here are the student's previous exam results: {get_personal_data()}.
 
-    weekDays = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"]
-    hoursDic = {
-                    "08:00": 2, "09:00": 3, "10:00": 4, 
-                    "11:00": 5, "12:00": 6, "13:00": 7, 
-                    "14:00": 8, "15:00": 9, "16:00": 10, 
-                    "17:00": 11, "18:00": 12, "19:00": 13, 
-                    "20:00": 14, "21:00": 15
-                }
+    There are 4 main subjects: **Matematik, Türkçe, Fen,** and **Sosyal (İnkılap, İngilizce ve Din Kültürü)**.
 
-    # First column for hours
-    excelFile.cell(row=1, column=1, value="Saatler") 
-    for i in range(0, len(hoursDic)):
-        excelFile.cell(row=i + 2, column=1, value=list(hoursDic.keys())[i])
-        
-    hour = None
-    column = 1
-    row = 2
-    for word in words:
-        if word in weekDays:
-            column += 1
-            row = 2  
-            excelFile.cell(row=1, column=column, value=word)  
-        else:
-            if not (word in hoursDic):
-                if word == "NULL":
-                    excelFile.cell(row=hoursDic[hour], column=column, value="Boş Zaman")
-                else:
-                    excelFile.cell(row=hoursDic[hour], column=column, value=word)
-                row += 1
-            else:
-                hour = word
-            
-    wb.save("weekly_schedule.xlsx")
-    
-def give_answer(model, messages):
-    response = model.invoke(messages)
-    return response.content
+    The total number of questions per subject is: {get_max_question_number()}.
 
-def ai_answer(user_input):
-    load_dotenv()
+    Your tasks:
+    1. **Analyze the student's exam performance for each subject.**
+    2. **Recommend test books for each subject based on their level.**
+    3. **When the student asks about specific subjects, provide book recommendations ONLY for those subjects.**
+    4. **Do not write more than two sentences for each subject.**
 
-    model = ChatGoogleGenerativeAI(model="gemini-2.0-flash")
-    messages = [
-        SystemMessage(content=f"""You are an exam assistant of a student.
-                                There are 4 lessons: Matematik, Turkce, Fen, Sosyal.
-                                Question numbers are : {get_max_question_number()}.
-                                Last exams results are : {get_personal_data()}.
-                                You'll review the user's message. 
-                                You should be realistic.
-                                You can say negative feedbacks of the student if the scores are unsufficient.
-                                Give some advice.
-                                Write maximum 5 sentences."""),
-        
-        HumanMessage(content=user_input),
-    ]
+    Here is the **list of available books** and their difficulty levels: {get_test_book_list()}.
 
-    return give_answer(model, messages)
+    Difficulty Level Meanings:
+    0 = Not Found  
+    1 = Very Easy  
+    2 = Easy  
+    3 = Fairly Easy  
+    4 = Moderate  
+    5 = Slightly Challenging  
+    6 = Challenging  
+    7 = Fairly Hard  
+    8 = Hard  
+    9 = Very Hard  
+    10 = Extremely Hard
+    """
+    )
 
-# Create a weekly schedule based on the AI's response
-def give_welcome_answer(model, messages):
-    
-    response = model.invoke(messages).content
-    
-    create_schedule(response)
-
-    return response
-    
-
-# this function is for the welcome message of the AI assistant
-# it will create a weekly schedule for the user based on their exam results
-def ai_welcome_message():
-    load_dotenv()
-
-    model = ChatGoogleGenerativeAI(model="gemini-2.0-flash")
-    messages = [
-        SystemMessage(content=f"""You are an exam assistant helping a student create a personalized weekly study schedule based on their latest exam results.
-
+schedule_prompt = PromptTemplate(
+        template=f"""You are an exam assistant helping a student create a personalized weekly study schedule based on their latest exam results.
+                                    
+                                    Examine the user request, create the schedule according to user's wishes.
+                                    
                                     There are 4 lessons: Matematik, Türkçe, Fen, and Sosyal.
 
-                                    The total number of questions per lesson is given by: {get_max_question_number()}.
+                                    The total number of questions per lesson is given by: {"{"}{get_max_question_number()}{"}"}.
 
                                     The student's recent exam results are: {get_personal_data()}.
 
@@ -115,13 +68,101 @@ def ai_welcome_message():
                                     Pazartesi 08:00 Türkçe 09:00 Matematik 10:00 NULL 11:00 Fen 12:00 NULL 13:00 Sosyal 14:00 Matematik 15:00 NULL 16:00 Türkçe 17:00 NULL 18:00 Fen 19:00 NULL 20:00 Sosyal 21:00 NULL
 
                                     Only output the weekly schedule exactly in this format, with no extra text, explanation, or punctuation. This output will be parsed automatically, so please keep the format strict and consistent.
+                                    
+                                    User message: {{query}}
 
-                                    """),
+                                    """
+    )
 
-        
-        HumanMessage(content="Bana haftalık bir çalışma programı hazırla. Saat 10.00 ile 16.00 arası okuldayım. O aralığa okul yaz."),
-    ]
+advice_prompt = PromptTemplate(
+        template=f"""You are an exam assistant of a student.
+                                There are 4 lessons: Matematik, Turkce, Fen, Sosyal.
+                                Question numbers are : {"{"}{get_max_question_number()}{"}"}.
+                                Last exams results are : {get_personal_data()}.
+                                You'll review the user's message. 
+                                You should be realistic.
+                                You can say negative feedbacks of the student if the scores are unsufficient.
+                                Give some advice.
+                                Write maximum 7 sentences.
+                                
+                                User message: {{query}}
+                                """,
+        input_variables=["query"]
+    )
 
-    return give_welcome_answer(model, messages)
+default_prompt = PromptTemplate(
+        template="""Üzgünüm, isteğinizi tam olarak anlayamadım veya desteklemiyorum. Lütfen daha açık bir şekilde ifade edin."""
+    )
 
+router_prompt_template = PromptTemplate(
+    template="""Aşağıdaki kullanıcı girdisinin temel niyetini belirle ve uygun hedefi seç.
+                    Sadece bir hedef seçmeli ve aşağıdaki formatta çıktı vermelisin:
+                    '{{ "destination": "hedef_adi", "next_inputs": {{"query": "orijinal_kullanici_sorgusu"}} }}'
 
+                    Olası hedefler ve açıklamaları:
+                    - 'book': Kullanıcı örnek çalışma kitabı istediğinde kullan. Örnek: "Notlarımı arttırmak için hangi kaynağı kullanmalıyım?", "Bana test kitabı öner".
+                    - 'schedule': Kullanıcı bir ders programı veya çalışma takvimi oluşturmak istediğinde kullan. Örnek: "Bana bu hafta için bir ders programı hazırla", "Haftalık takvimimi düzenle".
+                    - 'advice': Kullanıcı ders başarısı, öğrenme teknikleri veya genel kişisel gelişim hakkında tavsiye istediğinde kullan. Örnek: "Notlarımı nasıl yükseltebilirim?", "Daha iyi ders çalışmak için ne yapmalıyım?".
+                    - 'default': Yukarıdaki kategorilere uymayan herhangi bir istek veya anlaşılmayan sorgular için kullan.
+                    Kullanıcı girdisi: {query}
+                    """,
+    input_variables=["query"]
+)
+
+def ai_answer(user_input):
+    load_dotenv()
+
+    model = ChatGoogleGenerativeAI(model="gemini-2.0-flash")
+
+    book_advice_chain = book_advice_prompt | model | StrOutputParser()
+    schedule_chain = schedule_prompt | model | StrOutputParser() | RunnableLambda(create_schedule)
+    advice_chain = advice_prompt | model | StrOutputParser()
+    default_chain = default_prompt | model | StrOutputParser()
+    router_decision_chain = router_prompt_template | model | StrOutputParser() | RunnableLambda(parse_router_output)
+
+    main_router_flow = RunnableBranch(
+        (
+            lambda x: x["destination"] == "book",
+            book_advice_chain
+        ),
+        (
+            lambda x: x["destination"] == "schedule",
+            schedule_chain
+        ),
+        (
+            lambda x: x["destination"] == "advice",
+            advice_chain
+        ),
+        default_chain   #Hiçbiri eşleşmezse bu çalışır
+    )
+
+    final_router_chain = (
+            {"decision": router_decision_chain, "original_query": RunnableLambda(lambda x: x["query"])}
+            | RunnableLambda(
+        lambda x: main_router_flow.invoke(
+            {
+                "query": x["original_query"],
+                "destination": x["decision"]["destination"]
+            }
+        )
+    )
+    )
+
+    response1 = final_router_chain.invoke({"query": user_input})
+    return response1
+
+def give_answer(model, messages):
+    response = model.invoke(messages)
+    return response.content
+
+def parse_router_output(llm_output: str):
+    try:
+        # Bazen LLM çıktısı tam JSON olmayabilir, baştaki ve sondaki '{' ve '}' karakterlerini kontrol et
+        # Veya regex kullanarak JSON bloğunu çıkarabilirsiniz.
+        # Basit bir deneme için:
+        clean_output = llm_output.strip().replace("```json", "").replace("```", "")
+        return json.loads(clean_output)
+    except json.JSONDecodeError as e:
+        print(f"JSON ayrıştırma hatası: {e}. Ham çıktı: {llm_output}")
+        # Hata durumunda varsayılan bir rota döndürebiliriz
+        return {"destination": "default", "next_inputs": {"query": llm_output}}
