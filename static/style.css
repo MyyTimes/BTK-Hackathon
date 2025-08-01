@@ -1,385 +1,342 @@
-/* my_flask_app/static/style.css */
+/* Import Modern Font */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
-body {
-    font-family: Arial, sans-serif;
+/* *** COLORS, FONTS AND OTHER *** */
+:root {
+    --primary-color: #4f46e5;      /* Main color */
+    --secondary-color: #10b981;   /* Highlight color */
+    --background-color: #f8fafc;  /* Background color */
+    --card-background: #ffffff;     /* Background of charts */
+    --text-color: #1f2937;        /* Main text color */
+    --text-color-light: #6b7280;  /* lighter text color */
+    --border-color: #e5e7eb;      /* edge color */
+    --shadow-color: rgba(99, 102, 241, 0.1); /* soft and colorful shade */
+    --font-family: 'Poppins', sans-serif;
+    --border-radius: 12px; /* softer edges */
+    --transition-speed: 0.3s;
+}
+
+/*/*----- Universal Reset and Box Modeling /*-----*/
+* {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    background-color: #f4f4f4;
-    color: #333;
 }
 
+/*----- Body and Main Container Styles -----*/
+body {
+    font-family: var(--font-family);
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
+}
 .container {
     max-width: 1200px;
-    margin: 20px auto;
-    background-color: #fff;
+    margin: 30px auto;
     padding: 20px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-    min-height: calc(100vh - 40px);
+}
+.graph-container {
+    height: 500px; 
+    width: 100%; 
 }
 
-header {
-    background-color: #007bff;
-    color: white;
-    padding: 10px 0;
+/*----- Typography (Titels) -----*/
+h1 {
     text-align: center;
-    margin-bottom: 20px;
-    position: relative;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 40px;
 }
 
 h2 {
-    color: #2c3e50;
-    margin-top: 0;
-    margin-bottom: 15px;
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    gap: 25px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* reset button for ai chat */
+    gap: 15px;
 }
 
-/* Genel input ve buton stilleri (hem index.html hem add_net.html için) */
-input[type="text"],
-input[type="number"],
-button {
-    width: calc(100% - 20px);
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-sizing: border-box; /* Kutu modellemesini düzeltmek için */
-}
-
-/* Genel buton stili */
-button {
-    background-color: #28a745;
-    color: white;
-    cursor: pointer;
-    border: none;
-}
-
-button:hover {
-    background-color: #218838;
-}
-
-/* Tablo stilleri */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-}
-
-table, th, td {
-    border: 1px solid #ccc;
-}
-
-th, td {
-    padding: 10px;
-    text-align: left;
-}
-
-th {
-    background-color: #007bff;
-    color: white;
-}
-
-tr:nth-child(even) {
-    background-color: #f2f2f2;
-}
-
-/* Mesaj kutuları (flash messages) */
-.messages {
-    list-style: none;
-    padding: 0;
-    margin: 15px 0;
+h3 {
     text-align: center;
-}
-.messages li {
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    font-weight: bold;
-}
-.messages .success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-}
-.messages .error {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-}
-.messages .info {
-    background-color: #cce5ff;
-    color: #004085;
-    border: 1px solid #b8daff;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--text-color-light);
 }
 
-/* Genel bölüm stili (index.html ve add_net.html'deki section'lar) */
-.section {
-    margin-bottom: 30px; /* Bölümler arası boşluk */
-    padding: 20px;
-    background-color: #e9ecef; /* Açık gri arka plan */
-    border-radius: 8px;
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+/*----- Chart Designs (old .section and .flex-item)-----*/
+.section,
+.flex-item > div, /* index.html'deki .flex-item içindeki div'leri hedefliyor */
+.chart-box {
+    background-color: var(--card-background);
+    padding: 25px;
+    border-radius: var(--border-radius);
+    /* modern shadow */
+    box-shadow: 0 4px 20px var(--shadow-color);
+    margin-bottom: 30px;
+    width: 100%; 
 }
 
-/* Esnek kutular için kapsayıcı (index.html'deki gibi) */
 .flex-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 20px;
+    gap: 30px;
     margin-bottom: 30px;
 }
 
-/* Esnek öğeler (grafik ve sohbet/input kutuları) */
 .flex-item {
     flex: 1;
     min-width: 300px;
-    background-color: #e9ecef; /* flex-item'ın kendi arka planı */
-    padding: 20px;
+    display: flex; /* for the div inside to stretch completely */
+    flex-direction: column;
+}
+.flex-item > div {
+    flex: 1; /* flex-item makes the div inside it take up the entire space */
+}
+
+/*-----------------------------------*/
+/*----- Forms and Buttons -----*/
+input[type="text"],
+input[type="number"] {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start; /* Üst hizalama */
+    font-family: var(--font-family);
+    font-size: 1rem;
+    transition: all var(--transition-speed) ease;
 }
 
-/* Flex öğelerindeki başlıklar */
-.flex-item h2 {
-    margin-top: 0;
-    width: 100%;
-    text-align: center;
-    margin-bottom: 25px;
-    color: #007bff;
+input[type="text"]:focus,
+input[type="number"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
 }
 
-/* Grafik kapsayıcıları */
-.graph-container {
-    position: relative;
-    height: 250px; /* index.html için varsayılan */
-    width: 100%;
-    margin: auto;
+.form-group {
+    margin-bottom: 20px;
 }
-
-/* add_net.html'deki grafik kapsayıcısı için özel yükseklik */
-.section .chart-box .graph-container {
-    height: 300px; /* add_net.html'deki grafik daha büyük */
-}
-
-/* Navigasyon butonları (alt kısımdaki linkler) */
-.nav-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-top: 30px;
-}
-.nav-buttons a {
-    padding: 12px 25px;
-    background-color: #28a745;
-    color: white;
-    text-decoration: none;
-    border-radius: 5px;
-    transition: background-color 0.3s ease;
-    font-size: 1.1em;
-}
-.nav-buttons a:hover {
-    background-color: #218838;
-}
-
-/* Sohbet Arayüzü Stilleri */
-.chat-container {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    max-width: 400px;
-    margin: 0 auto; 
-}
-.chat-messages {
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 15px;
-    min-height: 150px;
-    max-height: 300px;
-    overflow-y: auto;
-    background-color: #f9f9f9;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-.chat-message {
-    padding: 8px 12px;
-    border-radius: 15px;
-    max-width: 80%;
-    word-wrap: break-word;
-}
-.chat-message.user {
-    background-color: #007bff;
-    color: white;
-    align-self: flex-end;
-    border-bottom-right-radius: 2px;
-}
-.chat-message.ai {
-    background-color: #e2e6ea;
-    color: #333;
-    align-self: flex-start;
-    border-bottom-left-radius: 2px;
-}
-.chat-input-group {
-    display: flex;
-    gap: 10px;
-    width: 100%;
-}
-.chat-input-group input[type="text"] {
-    flex-grow: 1;
-    padding: 10px;
-    border: 1px solid #007bff;
-    border-radius: 4px;
-    font-size: 16px;
-}
-.chat-input-group button {
-    padding: 10px 15px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-.chat-input-group button:hover {
-    background-color: #0056b3;
-}
-.start-chat-button {
-    padding: 12px 25px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1.1em;
-    transition: background-color 0.3s ease;
-    display: block; 
-    margin-top: 20px;
-    margin-left: auto; 
-    margin-right: auto; 
-}
-.start-chat-button:hover {
-    background-color: #218838;
-}
-
-/* Gizleme sınıfı */
-.hidden {
-    display: none !important;
-}
-
-/* add_net.html'deki form ve buton grupları için özel stiller */
-/* Bu stiller, genel input/button stillerini özelleştirir */
 .form-group label {
     display: block;
     margin-bottom: 8px;
-    font-weight: bold;
-    color: #555;
+    font-weight: 500;
+    color: var(--text-color-light);
 }
-.button-group {
+
+/*-----------------------------------*/
+/*----- Combined Button Styles -----*/
+.button-group button,
+.nav-buttons a,
+.start-chat-button,
+.chat-input-group button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: var(--font-family);
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    text-align: center;
+    display: inline-block;
+    transition: all var(--transition-speed) ease;
+}
+.button-group button:hover,
+.nav-buttons a:hover,
+.start-chat-button:hover,
+.chat-input-group button:hover {
+    background-color: #4338ca; /* darker than the main color */
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+}
+
+/*-----------------------------------*/
+/*----- Lesson Buttons -----*/
+.lesson-buttons {
     display: flex;
-    gap: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
     justify-content: center;
-    margin-top: 30px;
+    margin-top: 20px;
 }
+.lesson-buttons button {
+    padding: 8px 16px;
+    background-color: transparent;
+    color: var(--text-color-light);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    font-weight: 500;
+    transition: all var(--transition-speed) ease;
+}
+.lesson-buttons button.active,
+.lesson-buttons button:hover {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/*-----------------------------------*/
+/*----- Main Page  -----*/
 .back-link {
     display: block;
     text-align: center;
-    margin-top: 20px;
-    color: #007bff;
+    margin-top: 25px;
+    color: var(--primary-color);
     text-decoration: none;
+    font-weight: 500;
 }
 .back-link:hover {
     text-decoration: underline;
 }
 
-/* add_net.html'deki ders butonları */
-.lesson-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    justify-content: center;
-    margin-top: 20px;
-    margin-bottom: 0;
+
+/*-----------------------------------*/
+/*----- Modern Table Design -----*/
+table {
     width: 100%;
+    border-collapse: collapse;
 }
-.lesson-buttons button {
-    padding: 6px 10px;
-    font-size: 14px;
-    border: 1px solid #007bff;
-    border-radius: 4px;
-    background-color: #f0f8ff;
-    color: #007bff;
-    cursor: pointer;
-    transition: background-color 0.3s ease, color 0.3s ease;
-    flex-shrink: 0;
+th, td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
 }
-.lesson-buttons button.active,
-.lesson-buttons button:hover {
-    background-color: #007bff;
-    color: white;
+th {
+    font-weight: 600;
+    color: var(--text-color-light);
+    background-color: #f9fafb;
+}
+tbody tr:hover {
+    background-color: #f9fafb;
+}
+.empty-time {
+    color: #059669;
+    font-weight: 600;
+    background-color: #d1fae5;
 }
 
-/* Ortak responsive ayarlar */
+/*-----------------------------------*/
+/*----- Flash Messages -----*/
+.messages {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+}
+.messages li {
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+}
+.messages .success {
+    background-color: #ecfdf5; color: #065f46; border-color: #a7f3d0;
+}
+.messages .error {
+    background-color: #fef2f2; color: #991b1b; border-color: #fecaca;
+}
+.messages .info {
+    background-color: #eff6ff; color: #1e40af; border-color: #bfdbfe;
+}
+
+/*-----------------------------------*/
+/*----- Chat Interface -----*/
+.chat-container { 
+    flex: 1;
+    height: 100%; 
+}
+.chat-wrapper {
+    background-color: var(--card-background); /* chat button and its background color */
+    padding: 25px; 
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 20px var(--shadow-color);
+    height: 100%; 
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.chat-wrapper #startChatBtn.hidden {
+    display: none !important;
+}
+.chat-wrapper #chatPanel:not(.hidden) {
+    height: 100%;
+    width: 100%;
+}
+/* Chat Messages */
+.chat-messages {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    height: 300px;
+    overflow-y: auto;
+    display: flex; flex-direction: column; gap: 10px;
+}
+.chat-message { 
+    padding: 10px 15px; 
+    border-radius: 18px; 
+    max-width: 85%; 
+    line-height: 1.4; 
+}
+.chat-message.user {
+    background-color: var(--primary-color); 
+    color: white; 
+    align-self: flex-end; 
+    border-bottom-right-radius: 4px;
+}
+.chat-message.ai {
+    background-color: #f3f4f6; 
+    color: var(--text-color); 
+    align-self: flex-start; 
+    border-bottom-left-radius: 4px;
+}
+.chat-input-group { 
+    display: flex; 
+    gap: 10px; 
+}
+.chat-input-group input { 
+    flex-grow: 1; 
+}
+.chat-input-group button { 
+    background-color: var(--secondary-color); 
+}
+.chat-input-group button:hover { 
+    background-color: #0f936d; 
+}
+.hidden { 
+    display: none !important; 
+}
+
+/*-----------------------------------*/
+/* Reset Butonu */
+.reset-chat-button {
+    background: transparent;
+    border: none;
+    color: var(--text-color-light);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 5px;
+    transform: rotate(-90deg);
+}
+.reset-chat-button:hover {
+    color: var(--primary-color);
+}
+
+/*-----------------------------------*/
+/* --- 7. Responsive Settings --- */
 @media (max-width: 768px) {
     .flex-container {
         flex-direction: column;
-        align-items: stretch;
     }
-    .flex-item {
-        min-width: unset;
-        width: 100%;
+    h1 { 
+        font-size: 2rem; 
     }
-    .lesson-buttons {
-        flex-direction: column;
-        align-items: stretch;
+    .container { 
+        padding: 10px; margin: 10px auto; 
     }
-    .lesson-buttons button {
-        width: 100%;
-    }
-}
-
-/* add_net.html için özel responsive ayarlar */
-@media (max-width: 480px) {
-    .lesson-buttons {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .lesson-buttons button {
-        width: 100%;
-    }
-}
-
-/* Sıfırlama Butonu Stili */
-.reset-chat-button {
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 4px; 
-    width: 30px; 
-    height: 30px;
-    font-size: 1.2em; 
-    cursor: pointer;
-    display: inline-flex; /* Sembolü ortalamak için */
-    justify-content: center;
-    align-items: center;
-    transition: background-color 0.3s ease;
-}
-.reset-chat-button:hover {
-    background-color: #218838; 
-}
-.reset-icon { /* Resetleme butonunun içindeki geri alma sembolü */
-    display: inline-block; 
-    transform: rotate(-15deg) translateY(-3px);
-}
-
-.empty-time {
-    color: green;
-    font-weight: bold;
 }

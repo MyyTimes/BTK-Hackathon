@@ -171,8 +171,8 @@ def read_weekly_schedule_excel_file():
             table_rows = [["Invalid Data"]]
     else:
         print(f"Not found excel file: {SCHEDULE_EXCEL_PATH}")
-        table_headers = ["Error"]
-        table_rows = [["File Not Found"]]
+        table_headers = ["Haftalık program bulunamadı!"]
+        table_rows = [["Notlarınızı girerek yapay zekaya program hazırlatabilirsiniz."]]
     
     return (table_headers, table_rows)
 

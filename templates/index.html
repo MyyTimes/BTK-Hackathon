@@ -18,17 +18,18 @@
                     <canvas id="lessonSuccessChart"></canvas>
                 </div>
             </div>
-
             <div class="flex-item input-section">
-                <h2>Yapay Zekaya Sor 
-                    <button id="resetChatBtn" class="reset-chat-button" title="Sohbeti Sıfırla">
-                        <span class="reset-icon">&#x21BA;</span> 
-                    </button>
-                </h2>
+            <h2>Yapay Zeka Koçunla Muhabbete Geç
+                <button id="resetChatBtn" class="reset-chat-button" title="Sohbeti Sıfırla">
+                    <span class="reset-icon">&#x21BA;</span> 
+                </button>
+            </h2>
+
+            <div id="chat-wrapper" class="chat-wrapper">
                 <button id="startChatBtn" class="start-chat-button">Konuşmayı Başlat</button>
                 <div id="chatPanel" class="chat-container hidden">
                     <div class="chat-messages" id="chatMessages">
-                        </div>
+                    </div>
                     <div class="chat-input-group">
                         <input type="text" id="chatInput" placeholder="Mesajınızı yazın...">
                         <button id="sendChatBtn">Gönder</button>
@@ -36,7 +37,7 @@
                 </div>
             </div>
         </div>
-
+            
         <div class="section">
             <h2>Haftalık Programın</h2>
             <div class="table-container">
@@ -287,7 +288,7 @@
                 startChatBtn.classList.add('hidden'); // Butonu gizle
                 chatPanel.classList.remove('hidden'); // Sohbet panelini göster
 
-                chatMessages.innerHTML = '<div class="chat-message ai">Merhaba, size nasıl yardımcı olabilirim?.</div>';
+                chatMessages.innerHTML = '<div class="chat-message ai">Merhaba, size nasıl yardımcı olabilirim?</div>';
 
                 chatInput.focus(); // Input alanına odaklan
                 //saveChatState(); // Durumu kaydet

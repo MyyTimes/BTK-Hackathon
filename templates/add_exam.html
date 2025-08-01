@@ -70,7 +70,7 @@
                 </div>
 
                 <div class="button-group">
-                    <button type="submit">Netleri Kaydet / Güncelle</button>
+                    <button type="submit">Yeni Netleri Kaydet</button>
                 </div>
             </form>
 
@@ -178,7 +178,7 @@
             }
 
             const lessonInfo = lessonData[lessonKey];
-            document.getElementById('currentGraphTitle').innerText = lessonInfo.label + ' Grafiği';
+            document.getElementById('currentGraphTitle').innerText = 'Deneme Sonuçlarının Grafiği';
 
             currentChart = new Chart(ctx, {
                 type: 'line', // 'bar' da olabilir
