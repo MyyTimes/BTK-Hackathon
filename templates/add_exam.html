@@ -10,14 +10,18 @@
         const MAX_TURKCE_NET = {{ MAX_TURKCE_NET | tojson }};
         const MAX_MATEMATIK_NET = {{ MAX_MATEMATIK_NET | tojson }};
         const MAX_FEN_NET = {{ MAX_FEN_NET | tojson }};
-        const MAX_SOCIAL_NET = {{ MAX_SOCIAL_NET | tojson }};
+        const MAX_INKILAP_NET = {{MAX_INKILAP_NET | tojson }};
+        const MAX_DIN_NET = {{MAX_DIN_NET | tojson }};
+        const MAX_INGILIZCE_NET = {{MAX_INGILIZCE_NET | tojson }};
         const MAX_TOTAL_NET = {{ MAX_TOTAL_NET | tojson }};
-
-        const MIN_TURKCE_NET    = MAX_TURKCE_NET * -0.25;
-        const MIN_MATEMATIK_NET = MAX_MATEMATIK_NET * -0.25;
-        const MIN_FEN_NET       = MAX_FEN_NET * -0.25;
-        const MIN_SOCIAL_NET    = MAX_SOCIAL_NET * -0.25;
-        const MIN_TOTAL_NET     = MAX_TOTAL_NET * -0.25;
+        
+        const MIN_TURKCE_NET    = MAX_TURKCE_NET * -0.33;
+        const MIN_MATEMATIK_NET = MAX_MATEMATIK_NET * -0.33;
+        const MIN_FEN_NET       = MAX_FEN_NET * -0.33;
+        const MIN_INKILAP_NET = MAX_INKILAP_NET * -0.33;
+        const MIN_DIN_NET = MAX_DIN_NET * -0.33;
+        const MIN_INGILIZCE_NET = MAX_INGILIZCE_NET * -0.33;
+        const MIN_TOTAL_NET     = MAX_TOTAL_NET * -0.33;
     </script>
 </head>
 <body>
@@ -53,8 +57,16 @@
                     <input type="number" id="fen_net" name="fen_score" min="{{ MIN_FEN_NET }}" max="{{ MAX_FEN_NET }}" placeholder="Sayı giriniz..." value="0">
                 </div>
                 <div class="form-group">
-                    <label for="sosyal_net">Sosyal Neti:</label>
-                    <input type="number" id="sosyal_net" name="sosyal_score" min="{{ MIN_SOCIAL_NET }}" max="{{ MAX_SOCIAL_NET }}" placeholder="Sayı giriniz..." value="0">
+                    <label for="inkilap_net">İnkılap Neti:</label>
+                    <input type="number" id="inkilap_net" name="inkilap_score" min="{{ MIN_INKILAP_NET }}" max="{{ MAX_INKILAP_NET }}" placeholder="Sayı giriniz..." value="0">
+                </div>
+                <div class="form-group">
+                    <label for="din_net">Din Kültürü Neti:</label>
+                    <input type="number" id="din_net" name="din_score" min="{{ MIN_DIN_NET }}" max="{{ MAX_DIN_NET }}" placeholder="Sayı giriniz..." value="0">
+                </div>
+                <div class="form-group">
+                    <label for="ingilizce_net">İngilizce Neti:</label>
+                    <input type="number" id="ingilizce_net" name="ingilizce_score" min="{{ MIN_INGILIZCE_NET }}" max="{{ MAX_INGILIZCE_NET }}" placeholder="Sayı giriniz..." value="0">
                 </div>
 
                 <div class="button-group">
@@ -76,7 +88,9 @@
                     <button data-lesson="turkce">Türkçe</button>
                     <button data-lesson="matematik">Matematik</button>
                     <button data-lesson="fen">Fen</button>
-                    <button data-lesson="sosyal">Sosyal</button>
+                    <button data-lesson="inkilap">İnkılap</button>
+                    <button data-lesson="din">Din</button>
+                    <button data-lesson="ingilizce">İngilizce</button>
                 </div>
             </div>
         </div>
@@ -88,7 +102,9 @@
         const turkceNets = {{ turkce_score | tojson }};
         const matematikNets = {{ matematik_score | tojson }};
         const fenNets = {{ fen_score | tojson }};
-        const sosyalNets = {{ sosyal_score | tojson }};
+        const inkilapNets = {{ inkilap_score | tojson }};
+        const dinNets = {{ din_score | tojson }};
+        const ingilizceNets = {{ ingilizce_score | tojson }};
         const toplamNets = {{ total_score | tojson }};
 
         // Ders verilerini bir objede topla
@@ -107,32 +123,48 @@
                 data: turkceNets,
                 borderColor: 'rgba(255, 99, 132, 1)',
                 backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                maxNet: MAX_TURKCE_NET, // Türkçe için maksimum net
-                minNet: MIN_TURKCE_NET // Türkçe için minimum net (40 soru * -0.25 net = -10 net)
+                maxNet: MAX_TURKCE_NET, 
+                minNet: MIN_TURKCE_NET 
             },
             "matematik": {
                 label: 'Matematik Netleri',
                 data: matematikNets,
                 borderColor: 'rgba(54, 162, 235, 1)',
                 backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                maxNet: MAX_MATEMATIK_NET, // Matematik için maksimum net
-                minNet: MIN_MATEMATIK_NET // Matematik için minimum net
+                maxNet: MAX_MATEMATIK_NET, 
+                minNet: MIN_MATEMATIK_NET 
             },
             "fen": {
                 label: 'Fen Netleri',
                 data: fenNets,
                 borderColor: 'rgba(255, 159, 64, 1)',
                 backgroundColor: 'rgba(255, 159, 64, 0.2)',
-                maxNet: MAX_FEN_NET, // Fen için maksimum net
-                minNet: MIN_FEN_NET // Fen için minimum net
+                maxNet: MAX_FEN_NET,
+                minNet: MIN_FEN_NET 
             },
-            "sosyal": {
-                label: 'Sosyal Netleri',
-                data: sosyalNets,
+            "inkilap": {
+                label: 'İnkılap Netleri',
+                data: inkilapNets,
                 borderColor: 'rgba(153, 102, 255, 1)',
                 backgroundColor: 'rgba(153, 102, 255, 0.2)',
-                maxNet: MAX_SOCIAL_NET, // Sosyal için maksimum net
-                minNet: MIN_SOCIAL_NET // Sosyal için minimum net
+                maxNet: MAX_INKILAP_NET, 
+                minNet: MIN_INKILAP_NET 
+            },
+            "din": {
+                label: 'Din Kültürü Netleri',
+                data: dinNets,
+                borderColor: 'rgba(87, 255, 109, 1)',
+                backgroundColor: 'rgba(27, 134, 23, 0.2)',
+                maxNet: MAX_DIN_NET,
+                minNet: MIN_DIN_NET
+            },
+            "ingilizce": {
+                label: 'İngilizce Netleri',
+                data: ingilizceNets,
+                borderColor: 'rgba(255, 102, 102, 1)',
+                backgroundColor: 'rgba(204, 21, 21, 0.2)',
+                maxNet: MAX_INGILIZCE_NET, 
+                minNet: MIN_INGILIZCE_NET
             }
         };
 
@@ -149,7 +181,7 @@
             document.getElementById('currentGraphTitle').innerText = lessonInfo.label + ' Grafiği';
 
             currentChart = new Chart(ctx, {
-                type: 'line',
+                type: 'line', // 'bar' da olabilir
                 data: {
                     labels: denemeLabels,
                     datasets: [{
@@ -173,7 +205,7 @@
                             min: lessonInfo.minNet,
                             max: lessonInfo.maxNet,
                             ticks: {
-                                precision: 0
+                                precision: 1 // Float: 1 Int: 0
                             }
                         }
                     },

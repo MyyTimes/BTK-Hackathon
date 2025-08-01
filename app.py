@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 import connect_ai
-from lesson_functions import MAX_TURKCE_QUESTIONS, MAX_MATEMATIK_QUESTIONS, MAX_FEN_QUESTIONS, MAX_SOCIAL_QUESTIONS, TOTAL_QUESTIONS
+from lesson_functions import MAX_TURKCE_QUESTIONS, MAX_MATEMATIK_QUESTIONS, MAX_FEN_QUESTIONS, MAX_INKILAP_QUESTIONS, MAX_DIN_QUESTIONS, MAX_INGILIZCE_QUESTIONS, TOTAL_QUESTIONS
 from excel_operations import read_exam_result_excel_file, read_weekly_schedule_excel_file, get_exam_results, add_new_exam_result
 
 app = Flask(__name__)
@@ -46,13 +46,15 @@ def send_chat_message():
 def add_exam_page(): # ---------- ADD SCORE PAGE / add_exam_PAGE ----------
     
     deneme_labels = []
-    turkce_score = []
-    matematik_score = []
-    fen_score = []
-    sosyal_score = []
-    total_score = []
+    turkce_score = [0]
+    matematik_score = [0]
+    fen_score = [0]
+    inkilap_score = [0]
+    din_score = [0]
+    ingilizce_score = [0]
+    total_score = [0] 
 
-    (deneme_labels, turkce_score, matematik_score, fen_score, sosyal_score, total_score) = get_exam_results()
+    (deneme_labels, turkce_score, matematik_score, fen_score, inkilap_score, din_score, ingilizce_score, total_score) = get_exam_results()
 
     # Create the add net page with the data
     return render_template('add_exam.html',
@@ -60,12 +62,16 @@ def add_exam_page(): # ---------- ADD SCORE PAGE / add_exam_PAGE ----------
                            turkce_score=turkce_score,
                            matematik_score=matematik_score,
                            fen_score=fen_score,
-                           sosyal_score=sosyal_score,
+                           inkilap_score=inkilap_score,
+                           din_score=din_score,
+                           ingilizce_score=ingilizce_score,
                            total_score=total_score,
                            MAX_TURKCE_NET=MAX_TURKCE_QUESTIONS,
                            MAX_MATEMATIK_NET=MAX_MATEMATIK_QUESTIONS,
                            MAX_FEN_NET=MAX_FEN_QUESTIONS,
-                           MAX_SOCIAL_NET=MAX_SOCIAL_QUESTIONS,
+                           MAX_INKILAP_NET=MAX_INKILAP_QUESTIONS,
+                           MAX_DIN_NET=MAX_DIN_QUESTIONS,
+                           MAX_INGILIZCE_NET=MAX_INGILIZCE_QUESTIONS,
                            MAX_TOTAL_NET=TOTAL_QUESTIONS)
 
 # ---------- PROCESS ADD NEW EXAM ROUTER ----------
@@ -79,7 +85,9 @@ def process_new_exam(): # Reload the add net page after processing the form data
         turkce_score = request.form.get('turkce_score')
         matematik_score = request.form.get('matematik_score')
         fen_score = request.form.get('fen_score')
-        sosyal_score = request.form.get('sosyal_score')
+        inkilap_score = request.form.get('inkilap_score')
+        din_score = request.form.get('din_score')
+        ingilizce_score = request.form.get('ingilizce_score')
 
         if not exam_name:
             flash('Lütfen deneme adını doldurun!', 'error')
@@ -87,29 +95,37 @@ def process_new_exam(): # Reload the add net page after processing the form data
 
         try:
             # Convert scores to integers, if empty set to 0
-            turkce_score = int(turkce_score) if turkce_score else 0
-            matematik_score = int(matematik_score) if matematik_score else 0
-            fen_score = int(fen_score) if fen_score else 0
-            sosyal_score = int(sosyal_score) if sosyal_score else 0
+            turkce_score = float(turkce_score) if turkce_score else 0
+            matematik_score = float(matematik_score) if matematik_score else 0
+            fen_score = float(fen_score) if fen_score else 0
+            inkilap_score = float(inkilap_score) if inkilap_score else 0
+            din_score = float(din_score) if din_score else 0
+            ingilizce_score = float(ingilizce_score) if ingilizce_score else 0
             
             # input range checks
-            if not (MAX_TURKCE_QUESTIONS * -0.25 <= turkce_score <= MAX_TURKCE_QUESTIONS):
+            if not (MAX_TURKCE_QUESTIONS * -0.33 <= turkce_score <= MAX_TURKCE_QUESTIONS):
                 flash(f'Maksimum Türkçe neti: {MAX_TURKCE_QUESTIONS}!', 'error')
                 return redirect(url_for('add_exam_page'))
-            if not (MAX_MATEMATIK_QUESTIONS * -0.25 <= matematik_score <= MAX_MATEMATIK_QUESTIONS):
+            if not (MAX_MATEMATIK_QUESTIONS * -0.33 <= matematik_score <= MAX_MATEMATIK_QUESTIONS):
                 flash(f'Maksimum matematil neti: {MAX_MATEMATIK_QUESTIONS}!', 'error')
                 return redirect(url_for('add_exam_page'))
-            if not (MAX_FEN_QUESTIONS * -0.25 <= fen_score <= MAX_FEN_QUESTIONS):
+            if not (MAX_FEN_QUESTIONS * -0.33 <= fen_score <= MAX_FEN_QUESTIONS):
                 flash(f'Maksimum fen neti: {MAX_FEN_QUESTIONS}!', 'error')
                 return redirect(url_for('add_exam_page'))
-            if not (MAX_SOCIAL_QUESTIONS * -0.25 <= sosyal_score <= MAX_SOCIAL_QUESTIONS):
-                flash(f'Maksimum sosyal neti: {MAX_SOCIAL_QUESTIONS}!', 'error')
+            if not (MAX_INKILAP_QUESTIONS * -0.33 <= inkilap_score <= MAX_INKILAP_QUESTIONS):
+                flash(f'Maksimum sosyal neti: {MAX_INKILAP_QUESTIONS}!', 'error')
+                return redirect(url_for('add_exam_page'))
+            if not (MAX_DIN_QUESTIONS * -0.33 <= din_score <= MAX_DIN_QUESTIONS):
+                flash(f'Maksimum sosyal neti: {MAX_DIN_QUESTIONS}!', 'error')
+                return redirect(url_for('add_exam_page'))
+            if not (MAX_INGILIZCE_QUESTIONS * -0.33 <= ingilizce_score <= MAX_INGILIZCE_QUESTIONS):
+                flash(f'Maksimum sosyal neti: {MAX_INGILIZCE_QUESTIONS}!', 'error')
                 return redirect(url_for('add_exam_page'))
             
-            total_score = turkce_score + matematik_score + fen_score + sosyal_score
+            total_score = turkce_score + matematik_score + fen_score + inkilap_score + din_score + ingilizce_score
 
             # Write the new exam result to excel
-            add_new_exam_result(exam_name, turkce_score, matematik_score, fen_score, sosyal_score, total_score)
+            add_new_exam_result(exam_name, turkce_score, matematik_score, fen_score, inkilap_score, din_score, ingilizce_score, total_score)
             
             flash(f'{exam_name} denemesi eklendi!', 'success')
             

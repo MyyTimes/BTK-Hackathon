@@ -76,21 +76,25 @@
             'rgba(255, 99, 132, 0.7)', // Türkçe
             'rgba(54, 162, 235, 0.7)', // Matematik
             'rgba(255, 206, 86, 0.7)', // Fen
-            'rgba(75, 192, 192, 0.7)', // Sosyal
+            'rgba(75, 192, 192, 0.7)', // İnkılap
+            'rgba(16, 113, 42, 0.7)', // Din
+            'rgba(134, 30, 109, 0.7)', // İngilizce
             'rgba(153, 102, 255, 0.7)' // Toplam
         ];
         const borderColors = [
             'rgba(255, 99, 132, 1)',
             'rgba(54, 162, 235, 1)',
             'rgba(255, 206, 86, 1)',
-            'rgba(75, 192, 192, 1)',
+            'rgba(75, 192, 192, 0.7)', 
+            'rgba(16, 113, 42, 0.7)', 
+            'rgba(134, 30, 109, 0.7)',
             'rgba(153, 102, 255, 1)'
         ];
 
         // Ders Bazlı Başarı Oranları Çubuk Grafik Çizimi
         const ctxLessonSuccess = document.getElementById('lessonSuccessChart').getContext('2d');
         const lessonSuccessChart = new Chart(ctxLessonSuccess, {
-            type: 'bar', // Çubuk grafik
+            type: 'bar', // Bar chart (Çubuk grafiği)
             data: {
                 labels: lessonLabels,
                 datasets: [{
@@ -108,7 +112,7 @@
                     y: {
                         beginAtZero: true,
                         min: Math.min(...successPercentages) - 5 < 0 ? Math.min(...successPercentages) - 5 : 0,
-                        max: 100, // Yüzde olduğu için maksimum 100
+                        max: 100, // Max 100 -> it is percentage (%)
                         title: {
                             display: true,
                             text: 'Başarı Oranı (%)'
