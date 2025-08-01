@@ -1,15 +1,42 @@
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableBranch, RunnableLambda
 import json
 from lesson_functions import get_max_question_number
-from excel_operations import get_personal_data, create_schedule
+from excel_operations import get_personal_data, create_schedule, get_test_book_list
 
 START_HOUR = "08:00"
 END_HOUR = "21:00"
+
+book_advice_prompt = PromptTemplate(
+    template = f"""
+        Always respond in Turkish. You are an exam assistant helping a student prepare for the LGS exam, which is required for admission to high schools in Turkey.
+        Analyze the student's request carefully, focusing on their **past exam results**. Give **more weight to the final exam results** when evaluating their level.
+        Here are the student's previous exam results: {get_personal_data()}.
+        The total number of questions per subject is: {"{"}{get_max_question_number()}{"}"}.
+        Your tasks:
+        1. **Analyze the student's exam performance for each subject.**
+        2. **Recommend test books for each subject based on their level.**
+        3. **When the student asks about specific subjects, provide book recommendations ONLY for those subjects.**
+        4. **Do not write more than two sentences for each subject.**
+        Here is the list of available books and their difficulty levels: {get_test_book_list()}.
+        Difficulty Level Meanings:
+        0 = Not Found  
+        1 = Very Easy  
+        2 = Easy  
+        3 = Fairly Easy  
+        4 = Moderate  
+        5 = Slightly Challenging  
+        6 = Challenging  
+        7 = Fairly Hard  
+        8 = Hard  
+        9 = Very Hard  
+        10 = Extremely Hard
+        User message: {{query}}
+        """
+    )
 
 schedule_prompt = PromptTemplate(
         template=f"""You are an exam assistant helping a student create a personalized weekly study schedule based on their latest exam results.
@@ -56,8 +83,16 @@ advice_prompt = PromptTemplate(
     )
 
 default_prompt = PromptTemplate(
-        template="""Üzgünüm, isteğinizi tam olarak anlayamadım veya desteklemiyorum. Lütfen daha açık bir şekilde ifade edin.
-        """
+        template=f"""
+                    Sen bir sınav koçusun.
+                    Kullanıcının mesajını incele.
+                    Selamlaşma mesajlarını karşıla.
+                    Eğer kullanıcı soru sorduysa: 
+                        - Soru eğer sınav hakkındaysa soruyu cevapla.
+                        - Soru eğer sınav hakkında değilse soruyu nazikçe reddet.
+                    
+                    User message: {{query}}
+                    """
     )
 
 router_prompt_template = PromptTemplate(
@@ -66,6 +101,7 @@ router_prompt_template = PromptTemplate(
                     '{{ "destination": "hedef_adi", "next_inputs": {{"query": "orijinal_kullanici_sorgusu"}} }}'
 
                     Olası hedefler ve açıklamaları:
+                    - 'book': Kullanıcı örnek çalışma kitabı istediğinde kullan. Örnek: "Notlarımı arttırmak için hangi kaynağı kullanmalıyım?", "Bana test kitabı öner".
                     - 'schedule': Kullanıcı bir ders programı veya çalışma takvimi oluşturmak istediğinde kullan. Örnek: "Bana bu hafta için bir ders programı hazırla", "Haftalık takvimimi düzenle".
                     - 'advice': Kullanıcı ders başarısı, öğrenme teknikleri veya genel kişisel gelişim hakkında tavsiye istediğinde kullan. Örnek: "Notlarımı nasıl yükseltebilirim?", "Daha iyi ders çalışmak için ne yapmalıyım?".
                     - 'default': Yukarıdaki kategorilere uymayan herhangi bir istek veya anlaşılmayan sorgular için kullan.
@@ -79,12 +115,17 @@ def ai_answer(user_input):
 
     model = ChatGoogleGenerativeAI(model="gemini-2.0-flash")
 
+    book_advice_chain = book_advice_prompt | model | StrOutputParser()
     schedule_chain = schedule_prompt | model | StrOutputParser() | RunnableLambda(create_schedule)
     advice_chain = advice_prompt | model | StrOutputParser()
     default_chain = default_prompt | model | StrOutputParser()
     router_decision_chain = router_prompt_template | model | StrOutputParser() | RunnableLambda(parse_router_output)
 
     main_router_flow = RunnableBranch(
+        (
+            lambda x: x["destination"] == "book",
+            book_advice_chain
+        ),
         (
             lambda x: x["destination"] == "schedule",
             schedule_chain
