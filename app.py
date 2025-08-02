@@ -1,131 +1,26 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
-import openpyxl
 import os
 import connect_ai
+from flask import Flask, request, render_template, redirect, url_for, flash, jsonify, send_from_directory
+from lesson_functions import MAX_TURKCE_QUESTIONS, MAX_MATEMATIK_QUESTIONS, MAX_FEN_QUESTIONS, MAX_INKILAP_QUESTIONS, MAX_DIN_QUESTIONS, MAX_INGILIZCE_QUESTIONS, TOTAL_QUESTIONS
+from excel_operations import read_exam_result_excel_file, read_weekly_schedule_excel_file, get_exam_results, add_new_exam_result, SCHEDULE_EXCEL_PATH
 
 app = Flask(__name__)
 app.secret_key = "secret_key_A1W2S3E4D5F6" # for flash messages
-
-# EXCEL
-SCHEDULE_EXCEL_PATH = os.path.join(app.root_path, "weekly_schedule.xlsx")
-EXAM_RESULT_EXCEL_PATH = os.path.join(app.root_path, "exam_results.xlsx")
-
-# MAXIMUM QUESTIONS
-MAX_TURKCE_QUESTIONS = 40
-MAX_MATEMATIK_QUESTIONS = 40 
-MAX_FEN_QUESTIONS = 20
-MAX_SOCIAL_QUESTIONS = 20
-TOTAL_QUESTIONS = 120
-
-def get_max_question_number():
-    return {"Matematik": MAX_MATEMATIK_QUESTIONS, "Turkce" : MAX_TURKCE_QUESTIONS, "Fen" : MAX_FEN_QUESTIONS, "Sosyal" : MAX_SOCIAL_QUESTIONS}
-
-def GetDefaultLessonDatas():
-    lesson_labels = ["Türkçe", "Matematik", "Fen", "Sosyal", "Toplam"]
-    success_percentages = [0, 0, 0, 0, 0]
-    return lesson_labels, success_percentages
-
-def empty_exam_result_row():
-    deneme_labels = ["Error"]
-    turkce_score = [0]
-    matematik_score = [0]
-    fen_score = [0]
-    sosyal_score = [0]
-    total_score = [0] 
-    return (deneme_labels, turkce_score, matematik_score, fen_score, sosyal_score, total_score)    
 
 # ---------- MAIN ROUTER ---------- 
 @app.route('/')
 def index(): # ---------- MAIN PAGE ----------
     
-    # Read exam results excel file
     lesson_labels = [] # lesson names
     success_percentages = []
-
-    if os.path.exists(EXAM_RESULT_EXCEL_PATH):
-        try:
-            workbook_exam = openpyxl.load_workbook(EXAM_RESULT_EXCEL_PATH)
-            sheet_exam = workbook_exam.active
-
-            # Check and load column titles
-            headers = [cell.value for cell in sheet_exam[1]]
-            expected_headers = ["Deneme İsmi", "Türkçe Neti", "Matematik Neti", "Fen Neti", "Sosyal Neti", "Toplam Net"]
-
-            if headers != expected_headers:
-                print(f"Warning: {EXAM_RESULT_EXCEL_PATH} column's names are not like expected. Should be: {expected_headers}")
-                (lesson_labels, success_percentages) = GetDefaultLessonDatas()
-                
-            else:
-                total_turkce = 0
-                total_matematik = 0
-                total_fen = 0
-                total_sosyal = 0
-                total_toplam = 0
-                exam_count = 0
-
-                for row in sheet_exam.iter_rows(min_row=2, values_only=True): #first row is header
-
-                    if len(row) >= 6 and row[0] is not None:
-                        try:                            
-                            total_turkce += (row[1] if row[1] is not None else 0)
-                            total_matematik += (row[2] if row[2] is not None else 0)
-                            total_fen += (row[3] if row[3] is not None else 0)
-                            total_sosyal += (row[4] if row[4] is not None else 0)
-                            total_toplam += (row[5] if row[5] is not None else 0)
-                            exam_count += 1
-                        except TypeError as e:
-                            print(f"ERROR: {EXAM_RESULT_EXCEL_PATH} non-numeric value! Row: {row}, error: {e}")
-                            continue
-
-                if exam_count > 0:
-                    avg_turkce = total_turkce / exam_count
-                    avg_matematik = total_matematik / exam_count
-                    avg_fen = total_fen / exam_count
-                    avg_sosyal = total_sosyal / exam_count
-                    avg_toplam = total_toplam / exam_count
-                    
-                    # calculate success percentages
-                    # order is important: Türkçe, Matematik, Fen, Sosyal, Toplam
-                    lesson_labels = ["Türkçe", "Matematik", "Fen", "Sosyal", "Toplam"]
-                    success_percentages.append(round((avg_turkce / MAX_TURKCE_QUESTIONS) * 100, 2))
-                    success_percentages.append(round((avg_matematik / MAX_MATEMATIK_QUESTIONS) * 100, 2))
-                    success_percentages.append(round((avg_fen / MAX_FEN_QUESTIONS) * 100, 2))
-                    success_percentages.append(round((avg_sosyal / MAX_SOCIAL_QUESTIONS) * 100, 2))
-                    success_percentages.append(round((avg_toplam / TOTAL_QUESTIONS) * 100, 2))
-                else:
-                    (lesson_labels, success_percentages) = GetDefaultLessonDatas()
-            
-        except Exception as e:
-            print(f"ERROR: {e}")
-            (lesson_labels, success_percentages) = GetDefaultLessonDatas()
-    else:
-        print(f"{EXAM_RESULT_EXCEL_PATH} does not exist!")
-        (lesson_labels, success_percentages) = GetDefaultLessonDatas()
+    
+    (lesson_labels, success_percentages) = read_exam_result_excel_file()
 
     # Read weekly schedule excel file
     table_headers = []
     table_rows = []
-
-    if os.path.exists(SCHEDULE_EXCEL_PATH):
-        try:
-            workbook_table = openpyxl.load_workbook(SCHEDULE_EXCEL_PATH)
-            sheet_table = workbook_table.active
-
-            table_headers = [cell.value for cell in sheet_table[1]]
-
-            for row in sheet_table.iter_rows(min_row=2, values_only=True):
-                # if value is None, replace with empty string, else convert to string
-                cleaned_row = ["" if val is None else str(val) for val in row] 
-                table_rows.append(cleaned_row)
-            
-        except Exception as e:
-            print(f"It could not read table datas: {e}")
-            table_headers = ["Error"]
-            table_rows = [["Invalid Data"]]
-    else:
-        print(f"Not found excel file: {SCHEDULE_EXCEL_PATH}")
-        table_headers = ["Error"]
-        table_rows = [["File Not Found"]]
+    
+    (table_headers, table_rows) = read_weekly_schedule_excel_file()
 
     # Create the main page with the data
     return render_template('index.html', 
@@ -134,14 +29,6 @@ def index(): # ---------- MAIN PAGE ----------
                            table_headers=table_headers,
                            table_rows=table_rows)
 
-# ---------- WELCOME MESSAGE ROUTER ----------
-@app.route('/get_welcome_message')
-def get_welcome_message():
-    
-    welcome_ai_response = connect_ai.ai_welcome_message()
-    
-    return jsonify({'message': welcome_ai_response, 'should_refresh': True})
-
 # ---------- CHAT ROUTER ----------
 @app.route('/send_chat_message', methods=['POST'])
 def send_chat_message():
@@ -149,63 +36,59 @@ def send_chat_message():
 
     ai_response = connect_ai.ai_answer(user_message) # Process the user message with AI
     
+    # If the AI response is a schedule creation confirmation, refresh the page
+    if ai_response == "Ders programı oluşturuldu!":
+        return jsonify({'response': ai_response, 'should_refresh': True})
+    
     return jsonify({'response': ai_response}) # Return JSON response -> AI response
 
+# ---------- DOWNLOAD SCHEDULE ROUTER ----------
+@app.route('/download_schedule')
+def download_schedule():
+            
+    return send_from_directory(os.path.dirname(SCHEDULE_EXCEL_PATH), os.path.basename(SCHEDULE_EXCEL_PATH), as_attachment=True)
+
+@app.route('/check_schedule_exists', methods=['GET'])
+def check_schedule_exists():
+    file_exists = os.path.exists(SCHEDULE_EXCEL_PATH)
+    return jsonify({'exists': file_exists})
+
 # ---------- ADD SCORE ROUTER ----------
-@app.route('/add_net') 
-def add_net_page(): # ---------- ADD SCORE PAGE / ADD_NET_PAGE ----------
+@app.route('/add_exam') 
+def add_exam_page(): # ---------- ADD SCORE PAGE / add_exam_PAGE ----------
     
     deneme_labels = []
-    turkce_score = []
-    matematik_score = []
-    fen_score = []
-    sosyal_score = []
-    total_score = []
+    turkce_score = [0]
+    matematik_score = [0]
+    fen_score = [0]
+    inkilap_score = [0]
+    din_score = [0]
+    ingilizce_score = [0]
+    total_score = [0] 
 
-    if os.path.exists(EXAM_RESULT_EXCEL_PATH):
-        try:
-            workbook_exam = openpyxl.load_workbook(EXAM_RESULT_EXCEL_PATH)
-            sheet_exam = workbook_exam.active
-            for row in sheet_exam.iter_rows(min_row=2, values_only=True):
-                
-                if len(row) >= 6: # at least 6 columns
-                    
-                    if row[0] is None:
-                        deneme_labels.append("Deneme İsmi Yok") # exam name is None
-                    else:
-                        deneme_labels.append(row[0]) # exam name
-
-                    turkce_score.append(row[1] if row[1] is not None else 0)
-                    matematik_score.append(row[2] if row[2] is not None else 0)
-                    fen_score.append(row[3] if row[3] is not None else 0)
-                    sosyal_score.append(row[4] if row[4] is not None else 0)
-                    total_score.append(row[5] if row[5] is not None else 0)
-            
-        except Exception as e:
-            print(f"Error: {e}")
-            (deneme_labels, turkce_score, matematik_score, fen_score, sosyal_score, total_score) = empty_exam_result_row()
-            
-    else:
-        print(f"Çizgi Grafik (deneme_neti.xlsx) Excel dosyası bulunamadı: {EXAM_RESULT_EXCEL_PATH}")
-        (deneme_labels, turkce_score, matematik_score, fen_score, sosyal_score, total_score) = empty_exam_result_row()
+    (deneme_labels, turkce_score, matematik_score, fen_score, inkilap_score, din_score, ingilizce_score, total_score) = get_exam_results()
 
     # Create the add net page with the data
-    return render_template('add_net.html',
+    return render_template('add_exam.html',
                            deneme_labels=deneme_labels,
                            turkce_score=turkce_score,
                            matematik_score=matematik_score,
                            fen_score=fen_score,
-                           sosyal_score=sosyal_score,
+                           inkilap_score=inkilap_score,
+                           din_score=din_score,
+                           ingilizce_score=ingilizce_score,
                            total_score=total_score,
                            MAX_TURKCE_NET=MAX_TURKCE_QUESTIONS,
                            MAX_MATEMATIK_NET=MAX_MATEMATIK_QUESTIONS,
                            MAX_FEN_NET=MAX_FEN_QUESTIONS,
-                           MAX_SOCIAL_NET=MAX_SOCIAL_QUESTIONS,
+                           MAX_INKILAP_NET=MAX_INKILAP_QUESTIONS,
+                           MAX_DIN_NET=MAX_DIN_QUESTIONS,
+                           MAX_INGILIZCE_NET=MAX_INGILIZCE_QUESTIONS,
                            MAX_TOTAL_NET=TOTAL_QUESTIONS)
 
-# ---------- PROCESS ADD NET ROUTER ----------
-@app.route('/process_add_net', methods=['POST'])
-def process_add_net(): # Reload the add net page after processing the form data -> to rewrite excel
+# ---------- PROCESS ADD NEW EXAM ROUTER ----------
+@app.route('/process_new_exam', methods=['POST'])
+def process_new_exam(): # Reload the add net page after processing the form data -> to rewrite excel
 
     if request.method == 'POST':
         exam_name = request.form.get('exam_name').strip()
@@ -214,78 +97,61 @@ def process_add_net(): # Reload the add net page after processing the form data 
         turkce_score = request.form.get('turkce_score')
         matematik_score = request.form.get('matematik_score')
         fen_score = request.form.get('fen_score')
-        sosyal_score = request.form.get('sosyal_score')
+        inkilap_score = request.form.get('inkilap_score')
+        din_score = request.form.get('din_score')
+        ingilizce_score = request.form.get('ingilizce_score')
 
         if not exam_name:
             flash('Lütfen deneme adını doldurun!', 'error')
-            return redirect(url_for('add_net_page'))
+            return redirect(url_for('add_exam_page'))
 
         try:
             # Convert scores to integers, if empty set to 0
-            turkce_score = int(turkce_score) if turkce_score else 0
-            matematik_score = int(matematik_score) if matematik_score else 0
-            fen_score = int(fen_score) if fen_score else 0
-            sosyal_score = int(sosyal_score) if sosyal_score else 0
+            turkce_score = float(turkce_score) if turkce_score else 0
+            matematik_score = float(matematik_score) if matematik_score else 0
+            fen_score = float(fen_score) if fen_score else 0
+            inkilap_score = float(inkilap_score) if inkilap_score else 0
+            din_score = float(din_score) if din_score else 0
+            ingilizce_score = float(ingilizce_score) if ingilizce_score else 0
             
             # input range checks
-            if not (MAX_TURKCE_QUESTIONS * -0.25 <= turkce_score <= MAX_TURKCE_QUESTIONS):
+            if not (MAX_TURKCE_QUESTIONS * -0.33 <= turkce_score <= MAX_TURKCE_QUESTIONS):
                 flash(f'Maksimum Türkçe neti: {MAX_TURKCE_QUESTIONS}!', 'error')
-                return redirect(url_for('add_net_page'))
-            if not (MAX_MATEMATIK_QUESTIONS * -0.25 <= matematik_score <= MAX_MATEMATIK_QUESTIONS):
+                return redirect(url_for('add_exam_page'))
+            if not (MAX_MATEMATIK_QUESTIONS * -0.33 <= matematik_score <= MAX_MATEMATIK_QUESTIONS):
                 flash(f'Maksimum matematil neti: {MAX_MATEMATIK_QUESTIONS}!', 'error')
-                return redirect(url_for('add_net_page'))
-            if not (MAX_FEN_QUESTIONS * -0.25 <= fen_score <= MAX_FEN_QUESTIONS):
+                return redirect(url_for('add_exam_page'))
+            if not (MAX_FEN_QUESTIONS * -0.33 <= fen_score <= MAX_FEN_QUESTIONS):
                 flash(f'Maksimum fen neti: {MAX_FEN_QUESTIONS}!', 'error')
-                return redirect(url_for('add_net_page'))
-            if not (MAX_SOCIAL_QUESTIONS * -0.25 <= sosyal_score <= MAX_SOCIAL_QUESTIONS):
-                flash(f'Maksimum sosyal neti: {MAX_SOCIAL_QUESTIONS}!', 'error')
-                return redirect(url_for('add_net_page'))
+                return redirect(url_for('add_exam_page'))
+            if not (MAX_INKILAP_QUESTIONS * -0.33 <= inkilap_score <= MAX_INKILAP_QUESTIONS):
+                flash(f'Maksimum sosyal neti: {MAX_INKILAP_QUESTIONS}!', 'error')
+                return redirect(url_for('add_exam_page'))
+            if not (MAX_DIN_QUESTIONS * -0.33 <= din_score <= MAX_DIN_QUESTIONS):
+                flash(f'Maksimum sosyal neti: {MAX_DIN_QUESTIONS}!', 'error')
+                return redirect(url_for('add_exam_page'))
+            if not (MAX_INGILIZCE_QUESTIONS * -0.33 <= ingilizce_score <= MAX_INGILIZCE_QUESTIONS):
+                flash(f'Maksimum sosyal neti: {MAX_INGILIZCE_QUESTIONS}!', 'error')
+                return redirect(url_for('add_exam_page'))
             
-            total_score = turkce_score + matematik_score + fen_score + sosyal_score
+            total_score = turkce_score + matematik_score + fen_score + inkilap_score + din_score + ingilizce_score
 
-            # If excel file does not exist, create it
-            if not os.path.exists(EXAM_RESULT_EXCEL_PATH):
-                workbook = openpyxl.Workbook()
-                sheet = workbook.active
-                sheet.title = "Ders Netleri"
-                sheet.append(["Deneme İsmi", "Türkçe Neti", "Matematik Neti", "Fen Neti", "Sosyal Neti", "Toplam Net"])
-                workbook.save(EXAM_RESULT_EXCEL_PATH)
-            else:
-                workbook = openpyxl.load_workbook(EXAM_RESULT_EXCEL_PATH)
-                sheet = workbook.active
-
-            # check if the exam name already exists
-            found_row_idx = -1 # -1 means not found -> it is a FLAG
-            for r_idx in range(2, sheet.max_row + 1): # 2. satırdan başla
-                if sheet.cell(row=r_idx, column=1).value == exam_name: # find exam name
-                    found_row_idx = r_idx
-                    break
+            # Write the new exam result to excel
+            add_new_exam_result(exam_name, turkce_score, matematik_score, fen_score, inkilap_score, din_score, ingilizce_score, total_score)
             
-            if found_row_idx != -1: # exam name found
-                sheet.cell(row=found_row_idx, column=2).value = turkce_score
-                sheet.cell(row=found_row_idx, column=3).value = matematik_score
-                sheet.cell(row=found_row_idx, column=4).value = fen_score
-                sheet.cell(row=found_row_idx, column=5).value = sosyal_score
-                sheet.cell(row=found_row_idx, column=6).value = total_score
-                flash(f'{exam_name} sınav dosyası güncellendi!', 'success')
-            else: # exam name not found, append a new row
-                new_row_data = [exam_name, turkce_score, matematik_score, fen_score, sosyal_score, total_score]
-                sheet.append(new_row_data) # on last row
-                flash(f'{exam_name} denemesi eklendi!', 'success')
+            flash(f'{exam_name} denemesi eklendi!', 'success')
             
-            workbook.save(EXAM_RESULT_EXCEL_PATH)
-            
-            return redirect(url_for('add_net_page')) # return to add net page
+            return redirect(url_for('add_exam_page')) # return to add net page
         
         except ValueError:
             flash('Net değerleri geçerli sayılar olmalıdır.', 'error')
-            return redirect(url_for('add_net_page'))
+            return redirect(url_for('add_exam_page'))
         except Exception as e:
             flash(f'Veri kaydedilirken bir hata oluştu: {e}', 'error')
             print(f"Writing error: {e}")
-            return redirect(url_for('add_net_page'))
+            return redirect(url_for('add_exam_page'))
     
-    return redirect(url_for('add_net_page'))
+    return redirect(url_for('add_exam_page'))
 
 # ---------- Run the Flask application ----------
 if __name__ == '__main__':

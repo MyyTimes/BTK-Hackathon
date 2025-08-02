@@ -1,6 +1,5 @@
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableBranch, RunnableLambda
@@ -13,37 +12,30 @@ END_HOUR = "21:00"
 
 book_advice_prompt = PromptTemplate(
     template = f"""
-    Always respond in **Turkish**. You are an exam assistant helping a student prepare for the **LGS exam**, which is required for admission to high schools in Turkey.
-
-    Analyze the student's request carefully, focusing on their **past exam results**. Give **more weight to the final exam results** when evaluating their level.
-
-    Here are the student's previous exam results: {get_personal_data()}.
-
-    There are 4 main subjects: **Matematik, Türkçe, Fen,** and **Sosyal (İnkılap, İngilizce ve Din Kültürü)**.
-
-    The total number of questions per subject is: {get_max_question_number()}.
-
-    Your tasks:
-    1. **Analyze the student's exam performance for each subject.**
-    2. **Recommend test books for each subject based on their level.**
-    3. **When the student asks about specific subjects, provide book recommendations ONLY for those subjects.**
-    4. **Do not write more than two sentences for each subject.**
-
-    Here is the **list of available books** and their difficulty levels: {get_test_book_list()}.
-
-    Difficulty Level Meanings:
-    0 = Not Found  
-    1 = Very Easy  
-    2 = Easy  
-    3 = Fairly Easy  
-    4 = Moderate  
-    5 = Slightly Challenging  
-    6 = Challenging  
-    7 = Fairly Hard  
-    8 = Hard  
-    9 = Very Hard  
-    10 = Extremely Hard
-    """
+        Always respond in Turkish. You are an exam assistant helping a student prepare for the LGS exam, which is required for admission to high schools in Turkey.
+        Analyze the student's request carefully, focusing on their **past exam results**. Give **more weight to the final exam results** when evaluating their level.
+        Here are the student's previous exam results: {get_personal_data()}.
+        The total number of questions per subject is: {"{"}{get_max_question_number()}{"}"}.
+        Your tasks:
+        1. **Analyze the student's exam performance for each subject.**
+        2. **Recommend test books for each subject based on their level.**
+        3. **When the student asks about specific subjects, provide book recommendations ONLY for those subjects.**
+        4. **Do not write more than two sentences for each subject.**
+        Here is the list of available books and their difficulty levels: {get_test_book_list()}.
+        Difficulty Level Meanings:
+        0 = Not Found  
+        1 = Very Easy  
+        2 = Easy  
+        3 = Fairly Easy  
+        4 = Moderate  
+        5 = Slightly Challenging  
+        6 = Challenging  
+        7 = Fairly Hard  
+        8 = Hard  
+        9 = Very Hard  
+        10 = Extremely Hard
+        User message: {{query}}
+        """
     )
 
 schedule_prompt = PromptTemplate(
@@ -91,7 +83,16 @@ advice_prompt = PromptTemplate(
     )
 
 default_prompt = PromptTemplate(
-        template="""Üzgünüm, isteğinizi tam olarak anlayamadım veya desteklemiyorum. Lütfen daha açık bir şekilde ifade edin."""
+        template=f"""
+                    Sen bir sınav koçusun.
+                    Kullanıcının mesajını incele.
+                    Selamlaşma mesajlarını karşıla.
+                    Eğer kullanıcı soru sorduysa: 
+                        - Soru eğer sınav hakkındaysa soruyu cevapla.
+                        - Soru eğer sınav hakkında değilse soruyu nazikçe reddet.
+                    
+                    User message: {{query}}
+                    """
     )
 
 router_prompt_template = PromptTemplate(

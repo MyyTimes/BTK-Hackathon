@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import openpyxl
-from lesson_functions import get_default_lesson_datas, empty_exam_result_row, MAX_TURKCE_QUESTIONS, MAX_MATEMATIK_QUESTIONS, MAX_FEN_QUESTIONS, MAX_SOCIAL_QUESTIONS, TOTAL_QUESTIONS
+from lesson_functions import get_default_lesson_datas, empty_exam_result_row, MAX_TURKCE_QUESTIONS, MAX_MATEMATIK_QUESTIONS, MAX_FEN_QUESTIONS, MAX_INKILAP_QUESTIONS, MAX_DIN_QUESTIONS, MAX_INGILIZCE_QUESTIONS, TOTAL_QUESTIONS
 
 # EXCEL FILE PATHS
 current_script_directory = os.path.dirname(os.path.abspath(__file__))
@@ -85,7 +85,7 @@ def read_exam_result_excel_file():
 
             # Check and load column titles
             headers = [cell.value for cell in sheet_exam[1]]
-            expected_headers = ["Deneme İsmi", "Türkçe Neti", "Matematik Neti", "Fen Neti", "Sosyal Neti", "Toplam Net"]
+            expected_headers = ["Deneme İsmi", "Türkçe Neti", "Matematik Neti", "Fen Neti", "İnkılap Neti", "Din Kültürü Neti", "İngilizce Neti", "Toplam Net"]
 
             if headers != expected_headers:
                 print(f"Warning: {EXAM_RESULT_EXCEL_PATH} column's names are not like expected. Should be: {expected_headers}")
@@ -95,7 +95,9 @@ def read_exam_result_excel_file():
                 total_turkce = 0
                 total_matematik = 0
                 total_fen = 0
-                total_sosyal = 0
+                total_inkilap = 0
+                total_din = 0
+                total_ingilizce = 0
                 total_toplam = 0
                 exam_count = 0
 
@@ -106,8 +108,10 @@ def read_exam_result_excel_file():
                             total_turkce += (row[1] if row[1] is not None else 0)
                             total_matematik += (row[2] if row[2] is not None else 0)
                             total_fen += (row[3] if row[3] is not None else 0)
-                            total_sosyal += (row[4] if row[4] is not None else 0)
-                            total_toplam += (row[5] if row[5] is not None else 0)
+                            total_inkilap += (row[4] if row[4] is not None else 0)
+                            total_din += (row[5] if row[5] is not None else 0)
+                            total_ingilizce += (row[6] if row[6] is not None else 0)
+                            total_toplam += (row[7] if row[7] is not None else 0)
                             exam_count += 1
                         except TypeError as e:
                             print(f"ERROR: {EXAM_RESULT_EXCEL_PATH} non-numeric value! Row: {row}, error: {e}")
@@ -117,16 +121,20 @@ def read_exam_result_excel_file():
                     avg_turkce = total_turkce / exam_count
                     avg_matematik = total_matematik / exam_count
                     avg_fen = total_fen / exam_count
-                    avg_sosyal = total_sosyal / exam_count
+                    avg_inkilap = total_inkilap / exam_count
+                    avg_din = total_din / exam_count
+                    avg_ingilizce = total_ingilizce / exam_count
                     avg_toplam = total_toplam / exam_count
                     
                     # calculate success percentages
                     # order is important: Türkçe, Matematik, Fen, Sosyal, Toplam
-                    lesson_labels = ["Türkçe", "Matematik", "Fen", "Sosyal", "Toplam"]
+                    lesson_labels = ["Türkçe", "Matematik", "Fen", "İnkılap", "Din Kültürü", "İngilizce", "Toplam"]
                     success_percentages.append(round((avg_turkce / MAX_TURKCE_QUESTIONS) * 100, 2))
                     success_percentages.append(round((avg_matematik / MAX_MATEMATIK_QUESTIONS) * 100, 2))
                     success_percentages.append(round((avg_fen / MAX_FEN_QUESTIONS) * 100, 2))
-                    success_percentages.append(round((avg_sosyal / MAX_SOCIAL_QUESTIONS) * 100, 2))
+                    success_percentages.append(round((avg_inkilap / MAX_INKILAP_QUESTIONS) * 100, 2))
+                    success_percentages.append(round((avg_din / MAX_DIN_QUESTIONS) * 100, 2))
+                    success_percentages.append(round((avg_ingilizce / MAX_INGILIZCE_QUESTIONS) * 100, 2))
                     success_percentages.append(round((avg_toplam / TOTAL_QUESTIONS) * 100, 2))
                 else:
                     (lesson_labels, success_percentages) = get_default_lesson_datas()
@@ -163,8 +171,8 @@ def read_weekly_schedule_excel_file():
             table_rows = [["Invalid Data"]]
     else:
         print(f"Not found excel file: {SCHEDULE_EXCEL_PATH}")
-        table_headers = ["Error"]
-        table_rows = [["File Not Found"]]
+        table_headers = ["Haftalık program bulunamadı!"]
+        table_rows = [["Notlarınızı girerek yapay zekaya program hazırlatabilirsiniz."]]
     
     return (table_headers, table_rows)
 
@@ -175,7 +183,9 @@ def get_exam_results():
     turkce_score = []
     matematik_score = []
     fen_score = []
-    sosyal_score = []
+    inkilap_score = []
+    din_score = []
+    ingilizce_score = []
     total_score = []
     
     if os.path.exists(EXAM_RESULT_EXCEL_PATH):
@@ -194,26 +204,28 @@ def get_exam_results():
                     turkce_score.append(row[1] if row[1] is not None else 0)
                     matematik_score.append(row[2] if row[2] is not None else 0)
                     fen_score.append(row[3] if row[3] is not None else 0)
-                    sosyal_score.append(row[4] if row[4] is not None else 0)
-                    total_score.append(row[5] if row[5] is not None else 0)
+                    inkilap_score.append(row[4] if row[4] is not None else 0)
+                    din_score.append(row[5] if row[5] is not None else 0)
+                    ingilizce_score.append(row[6] if row[6] is not None else 0)
+                    total_score.append(row[7] if row[7] is not None else 0)
                 
         except Exception as e:
             print(f"Error: {e}")
-            (deneme_labels, turkce_score, matematik_score, fen_score, sosyal_score, total_score) = empty_exam_result_row()
+            (deneme_labels, turkce_score, matematik_score, fen_score, inkilap_score, din_score, ingilizce_score, total_score) = empty_exam_result_row()
     else:
         print(f"Çizgi Grafik (deneme_neti.xlsx) Excel dosyası bulunamadı: {EXAM_RESULT_EXCEL_PATH}")
-        (deneme_labels, turkce_score, matematik_score, fen_score, sosyal_score, total_score) = empty_exam_result_row()
+        (deneme_labels, turkce_score, matematik_score, fen_score, inkilap_score, din_score, ingilizce_score, total_score) = empty_exam_result_row()
         
-    return (deneme_labels, turkce_score, matematik_score, fen_score, sosyal_score, total_score)
+    return (deneme_labels, turkce_score, matematik_score, fen_score, inkilap_score, din_score, ingilizce_score, total_score)
 
 # Add new exam result to excel file for add_score page
-def add_new_exam_result(exam_name, turkce_score, matematik_score, fen_score, sosyal_score, total_score) -> None:
+def add_new_exam_result(exam_name, turkce_score, matematik_score, fen_score, inkilap_score, din_score, ingilizce_score, total_score) -> None:
     # If excel file does not exist, create it
     if not os.path.exists(EXAM_RESULT_EXCEL_PATH):
         workbook = openpyxl.Workbook()
         sheet = workbook.active
         sheet.title = "Ders Netleri"
-        sheet.append(["Deneme İsmi", "Türkçe Neti", "Matematik Neti", "Fen Neti", "Sosyal Neti", "Toplam Net"])
+        sheet.append(["Deneme İsmi", "Türkçe Neti", "Matematik Neti", "Fen Neti", "İnkılap Neti", "Din Kültürü Neti", "İngilizce Neti", "Toplam Net"])
         workbook.save(EXAM_RESULT_EXCEL_PATH)
     else:
         workbook = openpyxl.load_workbook(EXAM_RESULT_EXCEL_PATH)
@@ -230,10 +242,12 @@ def add_new_exam_result(exam_name, turkce_score, matematik_score, fen_score, sos
         sheet.cell(row=found_row_idx, column=2).value = turkce_score
         sheet.cell(row=found_row_idx, column=3).value = matematik_score
         sheet.cell(row=found_row_idx, column=4).value = fen_score
-        sheet.cell(row=found_row_idx, column=5).value = sosyal_score
-        sheet.cell(row=found_row_idx, column=6).value = total_score
+        sheet.cell(row=found_row_idx, column=5).value = inkilap_score
+        sheet.cell(row=found_row_idx, column=6).value = din_score
+        sheet.cell(row=found_row_idx, column=7).value = ingilizce_score
+        sheet.cell(row=found_row_idx, column=8).value = total_score
     else: # exam name not found, append a new row
-        new_row_data = [exam_name, turkce_score, matematik_score, fen_score, sosyal_score, total_score]
+        new_row_data = [exam_name, turkce_score, matematik_score, fen_score, inkilap_score, din_score, ingilizce_score, total_score]
         sheet.append(new_row_data) # on last row
     
     workbook.save(EXAM_RESULT_EXCEL_PATH)

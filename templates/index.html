@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sınav Koçu</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"> 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -18,17 +19,18 @@
                     <canvas id="lessonSuccessChart"></canvas>
                 </div>
             </div>
-
             <div class="flex-item input-section">
-                <h2>Yapay Zekaya Sor 
-                    <button id="resetChatBtn" class="reset-chat-button" title="Sohbeti Sıfırla">
-                        <span class="reset-icon">&#x21BA;</span> 
-                    </button>
-                </h2>
+            <h2>Yapay Zeka Koçunla Muhabbete Geç
+                <button id="resetChatBtn" class="reset-chat-button" title="Sohbeti Sıfırla">
+                    <span class="reset-icon">&#x21BA;</span> 
+                </button>
+            </h2>
+
+            <div id="chat-wrapper" class="chat-wrapper">
                 <button id="startChatBtn" class="start-chat-button">Konuşmayı Başlat</button>
                 <div id="chatPanel" class="chat-container hidden">
                     <div class="chat-messages" id="chatMessages">
-                        </div>
+                    </div>
                     <div class="chat-input-group">
                         <input type="text" id="chatInput" placeholder="Mesajınızı yazın...">
                         <button id="sendChatBtn">Gönder</button>
@@ -36,9 +38,14 @@
                 </div>
             </div>
         </div>
-
+            
         <div class="section">
-            <h2>Haftalık Programın</h2>
+            <div class="header-container">
+                <a id="downloadScheduleLink" href="#" class="download-schedule-button" title="Download">
+                    <span class="material-icons">download</span> Haftalık Programı İndir
+                </a>
+            </div>
+                <h2>Haftalık Programın</h2>
             <div class="table-container">
                 <table>
                     <thead>
@@ -62,7 +69,7 @@
         </div>
 
         <div class="nav-buttons">
-            <a href="{{ url_for('add_net_page') }}">Yeni Net Ekle / Netleri Gör</a>
+            <a href="{{ url_for('add_exam_page') }}">Yeni Net Ekle / Netleri Gör</a>
         </div>
     </div>
 
@@ -76,21 +83,25 @@
             'rgba(255, 99, 132, 0.7)', // Türkçe
             'rgba(54, 162, 235, 0.7)', // Matematik
             'rgba(255, 206, 86, 0.7)', // Fen
-            'rgba(75, 192, 192, 0.7)', // Sosyal
+            'rgba(75, 192, 192, 0.7)', // İnkılap
+            'rgba(16, 113, 42, 0.7)', // Din
+            'rgba(134, 30, 109, 0.7)', // İngilizce
             'rgba(153, 102, 255, 0.7)' // Toplam
         ];
         const borderColors = [
             'rgba(255, 99, 132, 1)',
             'rgba(54, 162, 235, 1)',
             'rgba(255, 206, 86, 1)',
-            'rgba(75, 192, 192, 1)',
+            'rgba(75, 192, 192, 0.7)', 
+            'rgba(16, 113, 42, 0.7)', 
+            'rgba(134, 30, 109, 0.7)',
             'rgba(153, 102, 255, 1)'
         ];
 
         // Ders Bazlı Başarı Oranları Çubuk Grafik Çizimi
         const ctxLessonSuccess = document.getElementById('lessonSuccessChart').getContext('2d');
         const lessonSuccessChart = new Chart(ctxLessonSuccess, {
-            type: 'bar', // Çubuk grafik
+            type: 'bar', // Bar chart (Çubuk grafiği)
             data: {
                 labels: lessonLabels,
                 datasets: [{
@@ -108,7 +119,7 @@
                     y: {
                         beginAtZero: true,
                         min: Math.min(...successPercentages) - 5 < 0 ? Math.min(...successPercentages) - 5 : 0,
-                        max: 100, // Yüzde olduğu için maksimum 100
+                        max: 100, // Max 100 -> it is percentage (%)
                         title: {
                             display: true,
                             text: 'Başarı Oranı (%)'
@@ -133,7 +144,7 @@
             }
         });
 
-
+        // JAVASCRIPT
         //------------------------------
         //------------------------------
         // Sohbet İşlevselliği
@@ -145,6 +156,7 @@
         const chatInput = document.getElementById('chatInput');
         const sendChatBtn = document.getElementById('sendChatBtn');
         const resetChatBtn = document.getElementById('resetChatBtn'); 
+        const downloadLink = document.getElementById('downloadScheduleLink'); // download weekly schedule (excel file)
 
         // Local Storage anahtarları
         const CHAT_PANEL_STATE_KEY = 'chatPanelOpen';
@@ -239,6 +251,9 @@
                 aiMessageDiv.textContent = aiResponse;
                 chatMessages.appendChild(aiMessageDiv);
 
+                 if(data.should_refresh)
+                    location.reload();
+
             } 
             catch (error) 
             {
@@ -280,33 +295,10 @@
                 startChatBtn.classList.add('hidden'); // Butonu gizle
                 chatPanel.classList.remove('hidden'); // Sohbet panelini göster
 
-                if (!localStorage.getItem(CHAT_HISTORY_KEY)) 
-                {
-                    chatMessages.innerHTML = '<div class="chat-message ai">Merhaba! Sınav sonuçlarınızı değerlendiriyorum.</div>';
-                    // Python API'den mesajı al
-                    fetch('/get_welcome_message')
-                        .then(response => response.json())
-                        .then(data => 
-                            {
-                                //chatMessages.innerHTML = `<div class="chat-message ai">${data.message}</div>`;
-                                if (data.should_refresh) 
-                                {
-                                    chatMessages.innerHTML = `<div class="chat-message ai">Programınızı hazırladım.</div>`;
-                                    saveChatState();
-                                    location.reload();
-                                }
-                            }
-                        )
-                        .catch(error => 
-                            {
-                                console.error('API çağrısı başarısız:', error);
-                                chatMessages.innerHTML = '<div class="chat-message ai">Merhaba! Size nasıl yardımcı olabilirim?</div>';
-                            }
-                        );
-                }
+                chatMessages.innerHTML = '<div class="chat-message ai">Merhaba, size nasıl yardımcı olabilirim?</div>';
 
                 chatInput.focus(); // Input alanına odaklan
-                saveChatState(); // Durumu kaydet
+                //saveChatState(); // Durumu kaydet
             }
         );
 
@@ -319,6 +311,26 @@
                 {
                     sendMessage();
                 }
+            }
+        );
+
+        // Check if schedule exists and download it
+        downloadLink.addEventListener('click', async (event) => 
+            {
+                const response = await fetch('/check_schedule_exists');
+                const data = await response.json();
+
+                if(data.exists)
+                {
+                    // Prevent to refresh page
+                    event.preventDefault();
+                    // Redirect directly to Flask route -> download
+                    window.location.href = '/download_schedule';
+                }
+                else
+                {
+                    alert("Haftalık program bulunamadı! Lütfen yapay zekadan program hazırlamasını isteyiniz.");
+                } 
             }
         );
         
