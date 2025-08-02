@@ -3,6 +3,9 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnableBranch, RunnableLambda
+from langchain_core.chat_history import BaseChatMessageHistory, InMemoryChatMessageHistory
+from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 import json
 from lesson_functions import get_max_question_number
 from excel_operations import get_personal_data, create_schedule, get_test_book_list
@@ -10,8 +13,8 @@ from excel_operations import get_personal_data, create_schedule, get_test_book_l
 START_HOUR = "08:00"
 END_HOUR = "21:00"
 
-book_advice_prompt = PromptTemplate(
-    template = f"""
+book_advice_prompt = ChatPromptTemplate.from_messages([
+    ("system", f"""
         Always respond in Turkish. You are an exam assistant helping a student prepare for the LGS exam, which is required for admission to high schools in Turkey.
         Analyze the student's request carefully, focusing on their **past exam results**. Give **more weight to the final exam results** when evaluating their level.
         Here are the student's previous exam results: {get_personal_data()}.
@@ -34,12 +37,13 @@ book_advice_prompt = PromptTemplate(
         8 = Hard  
         9 = Very Hard  
         10 = Extremely Hard
-        User message: {{query}}
-        """
-    )
+        """),
+    MessagesPlaceholder(variable_name="history"),
+     ("human", "{query}")
+    ])
 
-schedule_prompt = PromptTemplate(
-        template=f"""You are an exam assistant helping a student create a personalized weekly study schedule based on their latest exam results.
+schedule_prompt = ChatPromptTemplate.from_messages([
+    ("system", f"""You are an exam assistant helping a student create a personalized weekly study schedule based on their latest exam results.
                                     
                                     Examine the user request, create the schedule according to user's wishes.
                                     
@@ -60,40 +64,38 @@ schedule_prompt = PromptTemplate(
                                     Pazartesi 08:00 Türkçe 09:00 Matematik 10:00 NULL 11:00 Fen 12:00 NULL 13:00 Sosyal 14:00 Matematik 15:00 NULL 16:00 Türkçe 17:00 NULL 18:00 Fen 19:00 NULL 20:00 Sosyal 21:00 NULL
 
                                     Only output the weekly schedule exactly in this format, with no extra text, explanation, or punctuation. This output will be parsed automatically, so please keep the format strict and consistent.
-                                    
-                                    User message: {{query}}
+                                    """),
+    MessagesPlaceholder(variable_name="history"),
+    ("human", "{query}")
+    ])
 
-                                    """
-    )
+advice_prompt = ChatPromptTemplate.from_messages([
+    ("system", f"""You are an exam assistant of a student.
+                    There are 4 lessons: Matematik, Turkce, Fen, Sosyal.
+                    Question numbers are : {"{"}{get_max_question_number()}{"}"}.
+                    Last exams results are : {get_personal_data()}.
+                    You'll review the user's message. 
+                    You should be realistic.
+                    You can say negative feedbacks of the student if the scores are unsufficient.
+                    Give some advice.
+                    Write maximum 7 sentences.
+                    """),
+    MessagesPlaceholder(variable_name="history"),
+    ("human", "{query}")
+    ])
 
-advice_prompt = PromptTemplate(
-        template=f"""You are an exam assistant of a student.
-                                There are 4 lessons: Matematik, Turkce, Fen, Sosyal.
-                                Question numbers are : {"{"}{get_max_question_number()}{"}"}.
-                                Last exams results are : {get_personal_data()}.
-                                You'll review the user's message. 
-                                You should be realistic.
-                                You can say negative feedbacks of the student if the scores are unsufficient.
-                                Give some advice.
-                                Write maximum 7 sentences.
-                                
-                                User message: {{query}}
-                                """,
-        input_variables=["query"]
-    )
-
-default_prompt = PromptTemplate(
-        template=f"""
+default_prompt = ChatPromptTemplate.from_messages([
+    ("system", f"""
                     Sen bir sınav koçusun.
                     Kullanıcının mesajını incele.
                     Selamlaşma mesajlarını karşıla.
                     Eğer kullanıcı soru sorduysa: 
                         - Soru eğer sınav hakkındaysa soruyu cevapla.
-                        - Soru eğer sınav hakkında değilse soruyu nazikçe reddet.
-                    
-                    User message: {{query}}
-                    """
-    )
+                        - Soru eğer sınav hakkında değilse soruyu nazikçe reddet.                    
+                    """),
+    MessagesPlaceholder(variable_name="history"),
+    ("human", "{query}")
+    ])
 
 router_prompt_template = PromptTemplate(
     template="""Aşağıdaki kullanıcı girdisinin temel niyetini belirle ve uygun hedefi seç.
@@ -109,6 +111,16 @@ router_prompt_template = PromptTemplate(
                     """,
     input_variables=["query"]
 )
+
+store = {}
+ses_id = "12345"
+config = {"configurable": {"session_id": ses_id}}
+
+def get_session_history(session_id: str) -> BaseChatMessageHistory:
+    if session_id not in store:
+        store[session_id] = InMemoryChatMessageHistory()
+    return store[session_id]
+
 
 def ai_answer(user_input):
     load_dotenv()
@@ -137,14 +149,17 @@ def ai_answer(user_input):
         default_chain   #Hiçbiri eşleşmezse bu çalışır
     )
 
+    with_message_history = RunnableWithMessageHistory(main_router_flow, get_session_history, input_messages_key="query", history_messages_key="history")
+
     final_router_chain = (
             {"decision": router_decision_chain, "original_query": RunnableLambda(lambda x: x["query"])}
             | RunnableLambda(
-        lambda x: main_router_flow.invoke(
+        lambda x: with_message_history.invoke(
             {
                 "query": x["original_query"],
                 "destination": x["decision"]["destination"]
-            }
+            },
+            config=config
         )
     )
     )
