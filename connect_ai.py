@@ -43,35 +43,56 @@ book_advice_prompt = ChatPromptTemplate.from_messages([
     ])
 
 schedule_prompt = ChatPromptTemplate.from_messages([
-    ("system", f"""You are an exam assistant helping a student create a personalized weekly study schedule based on their latest exam results.
-                                    
-                                    Examine the user request, create the schedule according to user's wishes.
-                                    
-                                    There are 4 lessons: Matematik, Türkçe, Fen, and Sosyal.
+    ("system", f"""You are an academic assistant whose task is to create a personalized weekly study schedule for a student based on their latest exam results.
 
-                                    The total number of questions per lesson is given by: {"{"}{get_max_question_number()}{"}"}.
-
-                                    The student's recent exam results are: {get_personal_data()}.
-
-                                    Create a detailed weekly study schedule from Monday (Pazartesi) to Sunday (Pazar).
-
-                                    - Each day starts at {START_HOUR} and ends at {END_HOUR}.
-                                    - Each hour should be represented in the schedule in 24-hour format with leading zeros, e.g. "08:00".
-                                    - For each hour, first write the day of the week (in Turkish), followed by the lesson to study at that hour.
-                                    - If no lesson is scheduled at a specific hour, write "NULL".
-                                    - The output for each day should be a single line starting with the day name, followed by pairs of "hour lesson" separated by spaces.
-                                    - Example output for one day:
-                                    Pazartesi 08:00 Türkçe 09:00 Matematik 10:00 NULL 11:00 Fen 12:00 NULL 13:00 Sosyal 14:00 Matematik 15:00 NULL 16:00 Türkçe 17:00 NULL 18:00 Fen 19:00 NULL 20:00 Sosyal 21:00 NULL
-
-                                    Only output the weekly schedule exactly in this format, with no extra text, explanation, or punctuation. This output will be parsed automatically, so please keep the format strict and consistent.
-                                    """),
+                    YOUR TASK:
+                    - Using the provided data and logic, generate a weekly study schedule from Monday to Sunday. The schedule must prioritize the subjects the student struggles with the most.
+                    
+                    INPUT DATA:
+                    
+                    - Subjects: Matematik (Math), Türkçe (Turkish), Fen Bilimleri (Science), T.C. İnkılap Tarihi (History), Din Kültürü (Religious Culture), İngilizce (English).
+                    
+                    - Total Questions per Subject: {"{"}{get_max_question_number()}{"}"} (This is a dictionary containing the total number of questions for each subject).
+                    
+                    - Student's Exam Results: {get_personal_data()} (This is a dictionary containing the number of correct answers the student achieved for each subject).
+                    
+                    - Study Hours: Each day starts at {START_HOUR} and ends at {END_HOUR}.
+                    
+                    SCHEDULING LOGIC:
+                    
+                    - Prioritize: Calculate the success rate for each subject (Correct Answers / Total Questions).
+                    
+                    - Weighting: Allocate the most study time in the schedule to subjects with the lowest success rates. Allocate less time (for review purposes) to subjects with high success rates.
+                    
+                    - Balance the Load: Avoid scheduling difficult subjects back-to-back. Create a balanced schedule by spreading subjects throughout the day and including breaks.
+                    
+                    - Incorporate Breaks: Leave empty slots in the hourly schedule for the student to rest. These slots must be represented as NULL.
+                    
+                    OUTPUT FORMAT:
+                    
+                    - You must only output the weekly schedule in the format specified below. Do not add any explanations, greetings, or any other text before or after the schedule.
+                    
+                    - Each day must be on a single line.
+                    
+                    - The format for each line is: DayName HH:MM SubjectName HH:MM SubjectName ...
+                    
+                    - Use the Turkish names for the days of the week (Pazartesi, Salı, Çarşamba, Perşembe, Cuma, Cumartesi, Pazar).
+                    
+                    - Hours must be in 24-hour format with a leading zero (e.g., 08:00, 17:00).
+                    
+                    - If no subject is scheduled for a specific hour, you MUST write NULL. This rule is strict.
+                    
+                    - Your response must start directly with "Pazartesi" and end with the last entry for "Pazar".
+                    
+                    Example Output Line:
+                    Pazartesi 08:00 Türkçe 09:00 Matematik 10:00 NULL 11:00 Fen Bilimleri 12:00 NULL 13:00 T.C. İnkılap Tarihi 14:00 Matematik 15:00 NULL"""),
     MessagesPlaceholder(variable_name="history"),
     ("human", "{query}")
     ])
 
 advice_prompt = ChatPromptTemplate.from_messages([
     ("system", f"""You are an exam assistant of a student.
-                    There are 4 lessons: Matematik, Turkce, Fen, Sosyal.
+                    There are 6 lessons: Matematik, Turkce, Fen, İnkılap, Din Kültürü and İngilizce .
                     Question numbers are : {"{"}{get_max_question_number()}{"}"}.
                     Last exams results are : {get_personal_data()}.
                     You'll review the user's message. 
@@ -125,7 +146,7 @@ def get_session_history(session_id: str) -> BaseChatMessageHistory:
 def ai_answer(user_input):
     load_dotenv()
 
-    model = ChatGoogleGenerativeAI(model="gemini-2.0-flash")
+    model = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
 
     book_advice_chain = book_advice_prompt | model | StrOutputParser()
     schedule_chain = schedule_prompt | model | StrOutputParser() | RunnableLambda(create_schedule)
