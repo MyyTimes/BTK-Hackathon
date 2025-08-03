@@ -3,13 +3,35 @@
 
 ## 🇬🇧 English Version
 
+## Installation and Setup
+
+```bash
+git clone https://github.com/MyyTimes/BTK-Hackathon.git
+cd BTK-Hackathon
+pip install -r requirements.txt
+python app.py
+```
+
+### Set Up Environment Variables:
+
+- Create a file named **.env** in the project's root directory.
+- Add your Google Gemini API key to this file:
+
+```
+GOOGLE_API_KEY="YOUR_API_KEY_HERE"
+```
+
+Then open [**http://127.0.0.1:5000**](http://127.0.0.1:5000) in your web browser.
+
+---
+
 # AI-Powered LGS Exam Coach
 
 This project is a web application designed to provide a personalized learning experience for students preparing for the LGS (High School Entrance System) exam in Turkey. Built with Flask, this application acts as an AI coach (powered by Google Gemini), analyzing students' mock exam results to offer custom study schedules, resource recommendations, and general success strategies.
 
 ---
 
-## 🎯 Key Features
+## Key Features
 
 - **AI Chat Interface:** A dynamic chat panel allowing students to interact directly with the AI to ask questions, receive advice, and give commands.
 - **Personalized Study Schedule Generation:** Analyzes the student's strengths and weaknesses based on their exam scores (entered into an Excel file) to create a weekly study schedule. This schedule is also available for download as an .xlsx file.
@@ -22,7 +44,7 @@ This project is a web application designed to provide a personalized learning ex
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 - **Backend:** Python, Flask
 - **AI & LLM:** Google Gemini, LangChain
@@ -33,7 +55,7 @@ This project is a web application designed to provide a personalized learning ex
 
 ---
 
-## 📂 Project Structure and File Descriptions
+## Project Structure and File Descriptions
 
 ```
 .
@@ -53,7 +75,7 @@ This project is a web application designed to provide a personalized learning ex
 
 ---
 
-## ⚙️ How It Works (Application Architecture)
+## How It Works (Application Architecture)
 
 ### **Data Entry and Management:**
 
@@ -79,8 +101,10 @@ This project is a web application designed to provide a personalized learning ex
 
 ---
 
-## 🚀 Installation and Setup
 
+## 🇹🇷 Türkçe Sürüm
+
+### Kurulum
 
 ```bash
 git clone https://github.com/MyyTimes/BTK-Hackathon.git
@@ -89,18 +113,52 @@ pip install -r requirements.txt
 python app.py
 ```
 
-### 3️⃣ Set Up Environment Variables:
-
-- Create a file named **.env** in the project's root directory.
-- Add your Google Gemini API key to this file:
+`.env` dosyası oluşturun ve Google Gemini API anahtarınızı ekleyin:
 
 ```
-GOOGLE_API_KEY="YOUR_API_KEY_HERE"
+GOOGLE_API_KEY="ANAHTARINIZ"
 ```
 
-Then open [**http://127.0.0.1:5000**](http://127.0.0.1:5000) in your web browser.
+Sonrasında tarayıcınızda [**http://127.0.0.1:5000**](http://127.0.0.1:5000) adresini girin.
 
 ---
 
-## 🇹🇷 Türkçe Sürüm
+# LGS Yapay Zeka Destekli Sınav Koçu
 
+Bu proje, Türkiye'deki LGS (Liseye Geçiş Sınavı) sınavına hazırlanan öğrenciler için kişiselleştirilmiş bir öğrenme deneyimi sunmayı amaçlayan bir web uygulamasıdır. Flask ile geliştirilen bu uygulama, Google Gemini destekli bir yapay zekâ koçu olarak çalışır; öğrencilerin deneme sınavı sonuçlarını analiz eder, kişiye özel haftalık çalışma programları, ders bazlı başarı oranlarına uygun kaynak önerileri ve genel başarı stratejileri sunar.
+
+### Temel Özellikler
+- **Yapay Zeka Sohbet Arayüzü:** Öğrencilerin doğrudan yapay zekâ ile sohbet ederek soru sorabildiği, tavsiye alabildiği dinamik bir panel.
+- **Kişiselleştirilmiş Çalışma Programı Oluşturma:** Öğrencinin sınav netlerine göre güçlü ve zayıf yönlerini analiz ederek haftalık çalışma programı oluşturur. Program ayrıca .xlsx formatında indirilebilir.
+- **Akıllı Kitap Önerileri:** Öğrencinin başarı seviyesine göre en uygun test kitaplarını önerir.
+- **Deneme Sınavı Takibi:** Öğrenciler deneme sınavı netlerini sisteme girebilir.
+- **Performans Görselleştirme:**
+  - Ana sayfada derslere göre genel başarı oranlarını gösteren çubuk grafik.
+  - “Yeni Net Ekle” sayfasında her dersin netlerinin zaman içindeki değişimini gösteren çizgi grafik.
+- **Veri Saklama:** Tüm öğrenci verileri (sınav sonuçları, haftalık program ve kitap listesi) Excel dosyalarında tutulur.
+
+### Teknoloji Yığını
+- **Backend:** Python, Flask
+- **Yapay Zeka & LLM:** Google Gemini, LangChain
+- **Frontend:** HTML, CSS, JavaScript
+- **Veri İşleme ve Saklama:** Pandas, Openpyxl (Excel dosyaları için)
+- **Grafik Kütüphanesi:** Chart.js
+- **Ortam Değişkenleri:** python-dotenv
+
+## Dosya Yapısı ve Açıklamaları
+
+```
+.
+├── app.py                  # Flash uygulamları: Sunucu ve routing mekanizmasının yönetilmesi
+├── connect_ai.py           # LangChain kullanarak Google Gemini AI modeliyle tüm etkileşimleri yönetir ve niyet analizi gerçekleştirir.
+├── excel_operations.py     # Tüm Excel okuma/yazma işlemlerini yönetir.
+├── lesson_functions.py     # Derslerle ilgili değişken sabitleri (örneğin, maksimum soru sayısı) ve yardımcı fonksiyonları içerir.
+├── templates/
+│   ├── index.html          # Ana sayfa. Başarı çizelgesini, haftalık programı ve AI sohbet panelini içerir.
+│   └── add_exam.html       # Yeni sınav puanları ekleme ve konu bazlı ilerleme çizelgelerini görüntüleme sayfası.
+├── static/
+│   └── style.css           # Tüm HTML sayfaları için modern ve duyarlı tasarım stilleri.
+├── weekly_schedule.xlsx    # Yapay zeka tarafından oluşturulan haftalık çalışma programının kaydedildiği dosya.
+├── exam_results.xlsx       # Kullanıcıların girdiği tüm deneme sınav puanlarını depolayan veritabanı dosyası.
+└── test_book_list.xlsx     # Yapay zeka önerileri için kullanılan, mevcut kitapların ve zorluk seviyelerinin bir listesi.
+```
