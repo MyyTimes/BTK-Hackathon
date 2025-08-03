@@ -39,7 +39,7 @@ This project is a web application designed to provide a personalized learning ex
 
 ## Key Features
 
-- **AI Chat Interface:** A dynamic chat panel allowing students to interact directly with the AI to ask questions, receive advice, and give commands.
+- **AI Chat Interface:** A dynamic chat panel allowing students to interact directly with the AI to ask questions, receive advice, and give commands. Also it remembers old messages (memory system).
 - **Personalized Study Schedule Generation:** Analyzes the student's strengths and weaknesses based on their exam scores (entered into an Excel file) to create a weekly study schedule. This schedule is also available for download as an .xlsx file.
 - **Smart Book Recommendations:** Recommends the most suitable test books for the student's achievement level, based on a predefined list of books and their difficulty levels.
 - **Exam Score Tracking:** Allows users to input their mock exam scores for various subjects into the system.
@@ -135,7 +135,7 @@ Sonrasında tarayıcınızda [**http://127.0.0.1:5000**](http://127.0.0.1:5000) 
 Bu proje, Türkiye'deki LGS (Liseye Geçiş Sınavı) sınavına hazırlanan öğrenciler için kişiselleştirilmiş bir öğrenme deneyimi sunmayı amaçlayan bir web uygulamasıdır. Flask ile geliştirilen bu uygulama, Google Gemini destekli bir yapay zekâ koçu olarak çalışır; öğrencilerin deneme sınavı sonuçlarını analiz eder, kişiye özel haftalık çalışma programları, ders bazlı başarı oranlarına uygun kaynak önerileri ve genel başarı stratejileri sunar.
 
 ### Temel Özellikler
-- **Yapay Zeka Sohbet Arayüzü:** Öğrencilerin doğrudan yapay zekâ ile sohbet ederek soru sorabildiği, tavsiye alabildiği dinamik bir panel.
+- **Yapay Zeka Sohbet Arayüzü:** Öğrencilerin doğrudan yapay zekâ ile sohbet ederek soru sorabildiği, tavsiye alabildiği dinamik bir panel. Aynı zamanda eski mesajlaşmaları hatırlar (memory sistemi).
 - **Kişiselleştirilmiş Çalışma Programı Oluşturma:** Öğrencinin sınav netlerine göre güçlü ve zayıf yönlerini analiz ederek haftalık çalışma programı oluşturur. Program ayrıca .xlsx formatında indirilebilir.
 - **Akıllı Kitap Önerileri:** Öğrencinin başarı seviyesine göre en uygun test kitaplarını önerir.
 - **Deneme Sınavı Takibi:** Öğrenciler deneme sınavı netlerini sisteme girebilir.
