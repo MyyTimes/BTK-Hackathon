@@ -1,8 +1,9 @@
 ## 🌐 Language | Dil
-[English](#english) | [Türkçe](#turkce)
+[English](#english) | [Türkçe](#turkce) | [Contributors](#contributors)
 
 <a name="english"></a>
 ## 🇬🇧 English Version
+> 🏆 This project was developed during the **BTK Hackathon 2025**
 
 ## Installation and Setup
 
@@ -104,6 +105,7 @@ This project is a web application designed to provide a personalized learning ex
 
 <a name="turkce"></a>
 ## 🇹🇷 Türkçe Sürüm
+> 🏆 Bu proje **BTK Hackathon 2025** sırasında geliştirildi.
 
 ### Kurulum
 
@@ -163,3 +165,8 @@ Bu proje, Türkiye'deki LGS (Liseye Geçiş Sınavı) sınavına hazırlanan ö�
 ├── exam_results.xlsx       # Kullanıcıların girdiği tüm deneme sınav puanlarını depolayan veritabanı dosyası.
 └── test_book_list.xlsx     # Yapay zeka önerileri için kullanılan, mevcut kitapların ve zorluk seviyelerinin bir listesi.
 ```
+
+<a name="contributors"></a>
+## 👥 Contributors
+- **Talha Tanrıverdi** 
+- **Muhammed Yusuf Yıldız** 
