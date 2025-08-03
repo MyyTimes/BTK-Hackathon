@@ -26,6 +26,12 @@ python app.py
 ```
 GOOGLE_API_KEY="YOUR_API_KEY_HERE"
 ```
+- Moreover, you can connect your langchain API:
+```
+LANGCHAIN_API_KEY
+LANGCHAIN_TRACING_V2
+LANGCHAIN_PROJECT
+```
 
 Then open [**http://127.0.0.1:5000**](http://127.0.0.1:5000) in your web browser.
 
@@ -125,7 +131,12 @@ python app.py
 ```
 GOOGLE_API_KEY="ANAHTARINIZ"
 ```
-
+- Aynı zamanda langchain API'nizi bağlayabilirsiniz:
+```
+LANGCHAIN_API_KEY
+LANGCHAIN_TRACING_V2
+LANGCHAIN_PROJECT
+```
 Sonrasında tarayıcınızda [**http://127.0.0.1:5000**](http://127.0.0.1:5000) adresini girin.
 
 ---
