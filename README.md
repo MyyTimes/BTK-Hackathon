@@ -1,6 +1,7 @@
 ## 🌐 Language | Dil
-[English](#english-version) | [Türkçe](#türkçe-sürüm)
+[English](#english) | [Türkçe](#turkce)
 
+<a name="english"></a>
 ## 🇬🇧 English Version
 
 ## Installation and Setup
@@ -101,7 +102,7 @@ This project is a web application designed to provide a personalized learning ex
 
 ---
 
-
+<a name="turkce"></a>
 ## 🇹🇷 Türkçe Sürüm
 
 ### Kurulum
