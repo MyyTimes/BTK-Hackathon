@@ -74,11 +74,11 @@
     </div>
 
     <script>
-        // Ders Bazlı Başarı Oranları Grafiği Verileri
+        // Lesson-Based Success Rates Graph Data
         const lessonLabels = {{ lesson_labels | tojson }};
         const successPercentages = {{ success_percentages | tojson }};
 
-        // Renkler - Her ders için farklı renk belirleyebiliriz
+        // Colors - For each lesson
         const backgroundColors = [
             'rgba(255, 99, 132, 0.7)', // Türkçe
             'rgba(54, 162, 235, 0.7)', // Matematik
@@ -98,7 +98,7 @@
             'rgba(153, 102, 255, 1)'
         ];
 
-        // Ders Bazlı Başarı Oranları Çubuk Grafik Çizimi
+        // Lesson-Based Success -> Bar Chart
         const ctxLessonSuccess = document.getElementById('lessonSuccessChart').getContext('2d');
         const lessonSuccessChart = new Chart(ctxLessonSuccess, {
             type: 'bar', // Bar chart (Çubuk grafiği)
@@ -144,10 +144,9 @@
             }
         });
 
+        //------------------------------
         // JAVASCRIPT
         //------------------------------
-        //------------------------------
-        // Sohbet İşlevselliği
         
         // get from html - id
         const startChatBtn = document.getElementById('startChatBtn');
@@ -158,11 +157,11 @@
         const resetChatBtn = document.getElementById('resetChatBtn'); 
         const downloadLink = document.getElementById('downloadScheduleLink'); // download weekly schedule (excel file)
 
-        // Local Storage anahtarları
+        // Local Storage KEYS
         const CHAT_PANEL_STATE_KEY = 'chatPanelOpen';
         const CHAT_HISTORY_KEY = 'chatHistory';
 
-        // Sohbet panelinin durumunu ve geçmişini Local Storage'dan yükle
+        // Load Chat state and history from LOCALSTORAGE
         function loadChatState() 
         {
             const isChatPanelOpen = localStorage.getItem(CHAT_PANEL_STATE_KEY) === 'true';
@@ -176,12 +175,12 @@
                 if (savedChatHistory) 
                 {
                     chatMessages.innerHTML = savedChatHistory;
-                    // Sohbeti en aşağı kaydır
+                    // Scroll down
                     chatMessages.scrollTop = chatMessages.scrollHeight;
                 } 
                 else 
                 {
-                    // Geçmiş yoksa başlangıç mesajını göster
+                    // If there is no history, show the initial message
                     chatMessages.innerHTML = '<div class="chat-message ai">Merhaba! Size nasıl yardımcı olabilirim?</div>';
                 }
             } 
@@ -192,42 +191,41 @@
             }
         }
 
-        // Sohbet panelinin durumunu ve geçmişini Local Storage'a kaydet
+        // Save chat state and history to LOCALSTORAGE
         function saveChatState() 
         {
             localStorage.setItem(CHAT_PANEL_STATE_KEY, !chatPanel.classList.contains('hidden'));
             localStorage.setItem(CHAT_HISTORY_KEY, chatMessages.innerHTML);
         }
 
-        // Mesaj gönderme fonksiyonu (Yapay zeka API çağrısı eklendi)
+        // Sending message functions
         async function sendMessage() 
-        { // Added 'async' keyword
+        {
             const userMessage = chatInput.value.trim();
 
-            if (userMessage === '') return; // Boş mesaj gönderme
+            if (userMessage === '') return; // Pass empty message
 
-            // Kullanıcının mesajını göster
+            // Show user message
             const userMessageDiv = document.createElement('div');
             userMessageDiv.classList.add('chat-message', 'user');
             userMessageDiv.textContent = userMessage;
             chatMessages.appendChild(userMessageDiv);
 
-            // Sohbeti aşağı kaydır
+            // Scroll down
             chatMessages.scrollTop = chatMessages.scrollHeight;
 
-            // Input alanını temizle
+            // Clear input field
             chatInput.value = '';
 
-            // Loading mesajı veya animasyonu eklenebilir
             const aiLoadingDiv = document.createElement('div');
-            aiLoadingDiv.classList.add('chat-message', 'ai', 'loading-message'); // Add a loading class
+            aiLoadingDiv.classList.add('chat-message', 'ai', 'loading-message');
             aiLoadingDiv.textContent = 'Düşünüyorum...';
             chatMessages.appendChild(aiLoadingDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
 
             try 
             {
-                // Flask uygulamasına mesajı gönder
+                // Call flask function to send message
                 const response = await fetch('/send_chat_message', 
                     {
                         method: 'POST',
@@ -239,13 +237,13 @@
                     }
                 );
 
-                const data = await response.json(); // JSON yanıtı ayrıştır
-                const aiResponse = data.response; // Python'dan gelen yanıt
+                const data = await response.json(); // Get JSON response
+                const aiResponse = data.response; // Take response
 
-                // Loading mesajını kaldır
+                // Remove loading message
                 chatMessages.removeChild(aiLoadingDiv);
 
-                // Yapay zeka cevabını göster
+                // Show AI message
                 const aiMessageDiv = document.createElement('div');
                 aiMessageDiv.classList.add('chat-message', 'ai');
                 aiMessageDiv.textContent = aiResponse;
@@ -255,54 +253,51 @@
                     location.reload();
 
             } 
-            catch (error) 
+            catch (error) // ---------- ERROR 
             {
                 console.error('Mesaj gönderilirken hata oluştu:', error);
-                // Hata durumunda loading mesajını kaldır ve hata mesajı göster
-                chatMessages.removeChild(aiLoadingDiv);
+                chatMessages.removeChild(aiLoadingDiv); // Remove loading message
                 const errorMessageDiv = document.createElement('div');
                 errorMessageDiv.classList.add('chat-message', 'ai', 'error-message');
                 errorMessageDiv.textContent = 'Üzgünüm, mesajınızı anlayamadım.';
                 chatMessages.appendChild(errorMessageDiv);
             }
 
-            chatInput.focus(); // Input alanına tekrar odaklan
+            chatInput.focus(); // Focus on input field -> to take input
             chatMessages.scrollTop = chatMessages.scrollHeight;
 
-            saveChatState(); // Her mesaj gönderildiğinde durumu kaydet
+            saveChatState(); // Save history
         }
 
-        // BUTTON ACTIONS
-
+        // Reset chat
         resetChatBtn.addEventListener('click', () => 
             {
-                // Kullanıcıdan emin olup olmadığını sor
                 if (confirm("Sohbetimiz sıfırlanacak. Devam etmek istiyor musunuz?")) 
                 {
-                    // Local Storage'daki sohbet geçmişini temizle
+                    // Clear localstorage
                     localStorage.removeItem(CHAT_HISTORY_KEY);
-                    // İsteğe bağlı: Sohbet panelinin açık/kapalı durumunu da sıfırla
+                    // Remove chat panel 
                     localStorage.removeItem(CHAT_PANEL_STATE_KEY);
-                    // Sayfayı yeniden yükle
+                    // Refresh page
                     location.reload();
                 }
             }
         );
 
-        // Konuşmayı Başlat butonuna tıklanınca sohbet panelini göster ve durumu kaydet
+        // Click START CHATTING -> Konuşmayı Başlat Butonu
         startChatBtn.addEventListener('click', () => 
             {
-                startChatBtn.classList.add('hidden'); // Butonu gizle
-                chatPanel.classList.remove('hidden'); // Sohbet panelini göster
+                startChatBtn.classList.add('hidden'); // Hide button
+                chatPanel.classList.remove('hidden'); // Show chat panel
 
                 chatMessages.innerHTML = '<div class="chat-message ai">Merhaba, size nasıl yardımcı olabilirim?</div>';
 
-                chatInput.focus(); // Input alanına odaklan
-                //saveChatState(); // Durumu kaydet
+                chatInput.focus();
+                //saveChatState();
             }
         );
 
-        // Gönder butonuna tıklanınca veya Enter tuşuna basılınca mesaj gönder
+        // Send message +Enter 
         sendChatBtn.addEventListener('click', sendMessage);
         chatInput.addEventListener('keypress', 
             (event) => 
@@ -334,7 +329,7 @@
             }
         );
         
-        // Haftalık programdaki 'Boş Zaman' hücrelerini bul -> yeşil yap
+        // Find 'Boş Zaman' cells in weekly schedule -> make them GREEN
         document.addEventListener('DOMContentLoaded', () => 
             {
                 loadChatState();
@@ -349,7 +344,7 @@
             }
         );
 
-        // Sayfa yüklendiğinde sohbet durumunu yükle
+        // Load chat status on page load
         document.addEventListener('DOMContentLoaded', loadChatState);
     </script>
 </body>

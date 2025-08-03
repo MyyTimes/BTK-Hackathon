@@ -25,7 +25,7 @@
     </script>
 </head>
 <body>
-    <div class="container"> <!-- Ana sayfa ile aynı container sınıfı kullanıldı -->
+    <div class="container"> 
         <h1>Deneme Netleri Ekle ve Görüntüle</h1>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -38,7 +38,7 @@
             {% endif %}
         {% endwith %}
 
-        <div class="section"> <!-- İçerik bir section içine alındı -->
+        <div class="section"> <!-- Inside section -->
             <form action="{{ url_for('process_new_exam') }}" method="post">
                 <div class="form-group">
                     <label for="deneme_adi">Deneme Adı:</label>
@@ -77,7 +77,7 @@
             <a href="{{ url_for('index') }}" class="back-link">Ana Sayfaya Dön</a>
         </div>
 
-        <div class="section charts-container"> <!-- Grafik bölümü de bir section içine alındı -->
+        <div class="section charts-container"> <!-- Inside section -->
             <div class="chart-box">
                 <h3 id="currentGraphTitle">Toplam Netler Grafiği</h3>
                 <div class="graph-container">
@@ -97,7 +97,7 @@
     </div>
 
     <script>
-        // Grafik Verileri (Excel'den)
+        // Graph Datas - Lesson Scores (From excel)
         const denemeLabels = {{ deneme_labels | tojson }};
         const turkceNets = {{ turkce_score | tojson }};
         const matematikNets = {{ matematik_score | tojson }};
@@ -107,8 +107,7 @@
         const ingilizceNets = {{ ingilizce_score | tojson }};
         const toplamNets = {{ total_score | tojson }};
 
-        // Ders verilerini bir objede topla
-        // MAKSİMUM VE MİNİMUM NETLER BURADA GİRİLİ
+        // ALL LESSON DATAS
         const lessonData = {
             "toplam": {
                 label: 'Toplam Netler',
@@ -169,19 +168,19 @@
         };
 
         const ctx = document.getElementById('lessonNetleriChart').getContext('2d');
-        let currentChart; // Grafiği tutacak değişken
+        let currentChart; // !!! Chart (graph) variable
 
-        // Grafiği çizme fonksiyonu
+        // Draw graph
         function drawChart(lessonKey) {
             if (currentChart) {
-                currentChart.destroy(); // Mevcut grafiği yok et
+                currentChart.destroy(); // Remove existing chart
             }
 
             const lessonInfo = lessonData[lessonKey];
             document.getElementById('currentGraphTitle').innerText = 'Deneme Sonuçlarının Grafiği';
 
             currentChart = new Chart(ctx, {
-                type: 'line', // 'bar' da olabilir
+                type: 'line',
                 data: {
                     labels: denemeLabels,
                     datasets: [{
@@ -222,20 +221,23 @@
             });
         }
 
-        // Butonlara olay dinleyici ekle
+        //------------------------------
+        // BUTTON FUNCTIONS
+        //------------------------------
+
         document.querySelectorAll('.lesson-buttons button').forEach(button => {
             button.addEventListener('click', function() {
-                // Tüm butonlardan 'active' sınıfını kaldır
+                // Remove 'active' class for all buttons
                 document.querySelectorAll('.lesson-buttons button').forEach(btn => btn.classList.remove('active'));
-                // Tıklanan butona 'active' sınıfını ekle
+                // Add 'active' class for selected button
                 this.classList.add('active');
 
                 const lesson = this.dataset.lesson;
-                drawChart(lesson); // Seçilen dersin grafiğini çiz
+                drawChart(lesson); // Draw selected lesson graph
             });
         });
 
-        // Sayfa yüklendiğinde varsayılan olarak "Toplam" grafiğini çiz
+        // Default graph -> total scores (toplam)
         document.addEventListener('DOMContentLoaded', () => {
             drawChart('toplam');
         });
