@@ -92,14 +92,14 @@ def read_exam_result_excel_file():
                 (lesson_labels, success_percentages) = get_default_lesson_datas()
                 
             else:
-                total_turkce = 0
-                total_matematik = 0
-                total_fen = 0
-                total_inkilap = 0
-                total_din = 0
-                total_ingilizce = 0
-                total_toplam = 0
-                exam_count = 0
+                total_turkce = .0
+                total_matematik = .0
+                total_fen = .0
+                total_inkilap = .0
+                total_din = .0
+                total_ingilizce = .0
+                total_toplam = .0
+                exam_count = .0
 
                 for row in sheet_exam.iter_rows(min_row=2, values_only=True): #first row is header
 

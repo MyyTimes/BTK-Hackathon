@@ -39,6 +39,12 @@ body {
     height: 500px; 
     width: 100%; 
 }
+.header-container { /* for download schedule button */
+    display: flex;
+    align-items: center; 
+    gap: 10px; 
+    margin-bottom: 20px;
+}
 
 /*----- Typography (Titels) -----*/
 h1 {
@@ -125,6 +131,35 @@ input[type="number"]:focus {
     margin-bottom: 8px;
     font-weight: 500;
     color: var(--text-color-light);
+}
+
+/* download schedule button */
+.download-schedule-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: linear-gradient(135deg, #4cafef, #0077cc);
+    color: white;
+    font-weight: 600;
+    border-radius: 12px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 119, 204, 0.3);
+    margin-left: auto;
+    margin-right: 0;
+}
+.download-schedule-button:hover {
+    background: linear-gradient(135deg, #5cb6ff, #0088ee);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(0, 119, 204, 0.4);
+}
+.download-schedule-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 119, 204, 0.2);
+}
+.download-icon {
+    font-size: 18px;
 }
 
 /*-----------------------------------*/

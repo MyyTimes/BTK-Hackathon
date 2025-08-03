@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+import os
 import connect_ai
+from flask import Flask, request, render_template, redirect, url_for, flash, jsonify, send_from_directory
 from lesson_functions import MAX_TURKCE_QUESTIONS, MAX_MATEMATIK_QUESTIONS, MAX_FEN_QUESTIONS, MAX_INKILAP_QUESTIONS, MAX_DIN_QUESTIONS, MAX_INGILIZCE_QUESTIONS, TOTAL_QUESTIONS
-from excel_operations import read_exam_result_excel_file, read_weekly_schedule_excel_file, get_exam_results, add_new_exam_result
+from excel_operations import read_exam_result_excel_file, read_weekly_schedule_excel_file, get_exam_results, add_new_exam_result, SCHEDULE_EXCEL_PATH
 
 app = Flask(__name__)
 app.secret_key = "secret_key_A1W2S3E4D5F6" # for flash messages
@@ -35,11 +36,22 @@ def send_chat_message():
 
     ai_response = connect_ai.ai_answer(user_message) # Process the user message with AI
     
-    #if the AI response is a schedule creation confirmation, refresh the page
+    # If the AI response is a schedule creation confirmation, refresh the page
     if ai_response == "Ders programı oluşturuldu!":
         return jsonify({'response': ai_response, 'should_refresh': True})
     
     return jsonify({'response': ai_response}) # Return JSON response -> AI response
+
+# ---------- DOWNLOAD SCHEDULE ROUTER ----------
+@app.route('/download_schedule')
+def download_schedule():
+            
+    return send_from_directory(os.path.dirname(SCHEDULE_EXCEL_PATH), os.path.basename(SCHEDULE_EXCEL_PATH), as_attachment=True)
+
+@app.route('/check_schedule_exists', methods=['GET'])
+def check_schedule_exists():
+    file_exists = os.path.exists(SCHEDULE_EXCEL_PATH)
+    return jsonify({'exists': file_exists})
 
 # ---------- ADD SCORE ROUTER ----------
 @app.route('/add_exam') 
