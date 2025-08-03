@@ -11,7 +11,11 @@ from lesson_functions import get_max_question_number
 from excel_operations import get_personal_data, create_schedule, get_test_book_list
 
 START_HOUR = "08:00"
-END_HOUR = "21:00"
+END_HOUR = "22:00"
+
+store = {}
+session_id = "12345" # default sesion id
+config = {"configurable": {"session_id": session_id}}
 
 book_advice_prompt = ChatPromptTemplate.from_messages([
     ("system", f"""
@@ -50,7 +54,7 @@ schedule_prompt = ChatPromptTemplate.from_messages([
                     
                     INPUT DATA:
                     
-                    - Subjects: Matematik (Math), Türkçe (Turkish), Fen Bilimleri (Science), T.C. İnkılap Tarihi (History), Din Kültürü (Religious Culture), İngilizce (English).
+                    - Subjects: Matematik (Math), Türkçe (Turkish), Fen (Science), İnkılap (History), Din (Religious), İngilizce (English).
                     
                     - Total Questions per Subject: {"{"}{get_max_question_number()}{"}"} (This is a dictionary containing the total number of questions for each subject).
                     
@@ -85,14 +89,14 @@ schedule_prompt = ChatPromptTemplate.from_messages([
                     - Your response must start directly with "Pazartesi" and end with the last entry for "Pazar".
                     
                     Example Output Line:
-                    Pazartesi 08:00 Türkçe 09:00 Matematik 10:00 NULL 11:00 Fen Bilimleri 12:00 NULL 13:00 T.C. İnkılap Tarihi 14:00 Matematik 15:00 NULL"""),
+                    Pazartesi 08:00 Türkçe 09:00 Matematik 10:00 NULL 11:00 Fen 12:00 NULL 13:00 İnkılap 14:00 Matematik 15:00 NULL"""),
     MessagesPlaceholder(variable_name="history"),
     ("human", "{query}")
     ])
 
 advice_prompt = ChatPromptTemplate.from_messages([
     ("system", f"""You are an exam assistant of a student.
-                    There are 6 lessons: Matematik, Turkce, Fen, İnkılap, Din Kültürü and İngilizce .
+                    There are 6 lessons: Matematik, Turkce, Fen, İnkılap, Din and İngilizce .
                     Question numbers are : {"{"}{get_max_question_number()}{"}"}.
                     Last exams results are : {get_personal_data()}.
                     You'll review the user's message. 
@@ -106,42 +110,31 @@ advice_prompt = ChatPromptTemplate.from_messages([
     ])
 
 default_prompt = ChatPromptTemplate.from_messages([
-    ("system", f"""
-                    Sen bir sınav koçusun.
-                    Kullanıcının mesajını incele.
-                    Selamlaşma mesajlarını karşıla.
-                    Eğer kullanıcı soru sorduysa: 
-                        - Soru eğer sınav hakkındaysa soruyu cevapla.
-                        - Soru eğer sınav hakkında değilse soruyu nazikçe reddet.                    
+    ("system", f"""You are an exam coach.
+                    Analyze the user's message.
+                    Respond politely to greetings.
+                    If the user asks a question:
+                        - If the question is about the exam, answer it.
+                        - If the question is not about the exam, politely refuse to answer.               
                     """),
     MessagesPlaceholder(variable_name="history"),
     ("human", "{query}")
     ])
 
 router_prompt_template = PromptTemplate(
-    template="""Aşağıdaki kullanıcı girdisinin temel niyetini belirle ve uygun hedefi seç.
-                    Sadece bir hedef seçmeli ve aşağıdaki formatta çıktı vermelisin:
-                    '{{ "destination": "hedef_adi", "next_inputs": {{"query": "orijinal_kullanici_sorgusu"}} }}'
+    template="""Determine the main intent of the user input below and select the appropriate target.
+                    You must choose only one target and output it in the following format:
+                    '{{ "destination": "target_name", "next_inputs": {{"query": "original_user_query"}} }}'
 
-                    Olası hedefler ve açıklamaları:
-                    - 'book': Kullanıcı örnek çalışma kitabı istediğinde kullan. Örnek: "Notlarımı arttırmak için hangi kaynağı kullanmalıyım?", "Bana test kitabı öner".
-                    - 'schedule': Kullanıcı bir ders programı veya çalışma takvimi oluşturmak istediğinde kullan. Örnek: "Bana bu hafta için bir ders programı hazırla", "Haftalık takvimimi düzenle".
-                    - 'advice': Kullanıcı ders başarısı, öğrenme teknikleri veya genel kişisel gelişim hakkında tavsiye istediğinde kullan. Örnek: "Notlarımı nasıl yükseltebilirim?", "Daha iyi ders çalışmak için ne yapmalıyım?".
-                    - 'default': Yukarıdaki kategorilere uymayan herhangi bir istek veya anlaşılmayan sorgular için kullan.
-                    Kullanıcı girdisi: {query}
+                    Possible targets and their descriptions:
+                    - 'book': Use when the user requests a sample workbook. Example: "Notlarımı arttırmak için hangi kaynağı kullanmalıyım?", "Bana test kitabı öner".
+                    - 'schedule': Use when the user wants to create a lesson plan or study schedule. Example: "Bana bu hafta için bir ders programı hazırla", "Haftalık takvimimi düzenle".
+                    - 'advice': Use when the user asks for advice on academic success, learning techniques, or general personal development. Example: "Notlarımı nasıl yükseltebilirim?", "Daha iyi ders çalışmak için ne yapmalıyım?".
+                    - 'default': Use for any requests that do not fit the above categories or for unclear queries.
+                    User input: {query}
                     """,
     input_variables=["query"]
 )
-
-store = {}
-ses_id = "12345"
-config = {"configurable": {"session_id": ses_id}}
-
-def get_session_history(session_id: str) -> BaseChatMessageHistory:
-    if session_id not in store:
-        store[session_id] = InMemoryChatMessageHistory()
-    return store[session_id]
-
 
 def ai_answer(user_input):
     load_dotenv()
@@ -167,7 +160,7 @@ def ai_answer(user_input):
             lambda x: x["destination"] == "advice",
             advice_chain
         ),
-        default_chain   #Hiçbiri eşleşmezse bu çalışır
+        default_chain 
     )
 
     with_message_history = RunnableWithMessageHistory(main_router_flow, get_session_history, input_messages_key="query", history_messages_key="history")
@@ -192,14 +185,22 @@ def give_answer(model, messages):
     response = model.invoke(messages)
     return response.content
 
+def get_session_history(session_id: str) -> BaseChatMessageHistory:
+    if session_id not in store:
+        store[session_id] = InMemoryChatMessageHistory()
+    return store[session_id]
+
+def set_session_id(new_session_id: str):
+    global session_id, config 
+    config["configurable"]["session_id"] = new_session_id
+    
 def parse_router_output(llm_output: str):
     try:
-        # Bazen LLM çıktısı tam JSON olmayabilir, baştaki ve sondaki '{' ve '}' karakterlerini kontrol et
-        # Veya regex kullanarak JSON bloğunu çıkarabilirsiniz.
-        # Basit bir deneme için:
+        # Sometimes LLM output may not be complete JSON, check for leading and trailing '{' and '}' characters.
+        # Or you can extract the JSON block using regex. -> For a simple test:
         clean_output = llm_output.strip().replace("```json", "").replace("```", "")
         return json.loads(clean_output)
     except json.JSONDecodeError as e:
         print(f"JSON ayrıştırma hatası: {e}. Ham çıktı: {llm_output}")
-        # Hata durumunda varsayılan bir rota döndürebiliriz
+        # default destination (for error time)
         return {"destination": "default", "next_inputs": {"query": llm_output}}

@@ -11,6 +11,13 @@ TEST_BOOK_LIST_PATH = os.path.join(current_script_directory, "test_book_list.xls
 
 # ----- connect_ai.py -----
 
+def get_weekly_schedule():
+    if(os.path.exists(SCHEDULE_EXCEL_PATH)):
+        schedule = pd.read_excel("weekly_schedule.xlsx")
+        return schedule.to_string()
+    else:
+        return "Weekly schedule does not exist. Create new one."
+
 # Get exam results from excel file and convert to string to send to AI model
 def get_personal_data():
     if os.path.exists(EXAM_RESULT_EXCEL_PATH):

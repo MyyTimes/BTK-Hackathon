@@ -270,7 +270,7 @@
         }
 
         // Reset chat
-        resetChatBtn.addEventListener('click', () => 
+        resetChatBtn.addEventListener('click', async () => 
             {
                 if (confirm("Sohbetimiz sıfırlanacak. Devam etmek istiyor musunuz?")) 
                 {
@@ -278,6 +278,15 @@
                     localStorage.removeItem(CHAT_HISTORY_KEY);
                     // Remove chat panel 
                     localStorage.removeItem(CHAT_PANEL_STATE_KEY);
+                    
+                    // Set new sesion id to reset ai history
+                    const newSessionId = 'session_id_' + Date.now(); // random id
+                    await fetch('/set_session_id', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ session_id: newSessionId })
+                    });
+
                     // Refresh page
                     location.reload();
                 }
@@ -290,7 +299,7 @@
                 startChatBtn.classList.add('hidden'); // Hide button
                 chatPanel.classList.remove('hidden'); // Show chat panel
 
-                chatMessages.innerHTML = '<div class="chat-message ai">Merhaba, size nasıl yardımcı olabilirim?</div>';
+                chatMessages.innerHTML = '<div class="chat-message ai">Merhaba, sizin için haftalık ders programı hazırlayabilir ve kaynak önerebilirim. Sorularınızı memnuniyetle cevaplayacağım.</div>';
 
                 chatInput.focus();
                 //saveChatState();

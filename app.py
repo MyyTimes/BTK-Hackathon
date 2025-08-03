@@ -42,6 +42,16 @@ def send_chat_message():
     
     return jsonify({'response': ai_response}) # Return JSON response -> AI response
 
+# ---------- SET SESION ID (AI) ----------
+@app.route('/set_session_id', methods=['POST'])
+def set_session_id_route():
+    data = request.json
+    new_id = data.get('session_id')
+    if new_id:
+        connect_ai.set_session_id(new_id)  # set new id
+        return jsonify({"status": "success"})
+    return jsonify({"status": "error", "message": "No session_id provided"}), 400
+
 # ---------- DOWNLOAD SCHEDULE ROUTER ----------
 @app.route('/download_schedule')
 def download_schedule():
